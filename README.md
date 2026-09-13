@@ -10,10 +10,10 @@ connector order ST030926127752) with the fewest additional purchases.
 
 | | |
 |---|---|
-| DC bus | **24 V** (10–28 V) with AOD4184 TO-252 FETs; 16 V build option with AO3400 |
-| Phase current | **±5 A peak, 3.5 A rms** continuous (sense-limited; FETs have 3× margin) |
+| DC bus | **16 V** (12–18 V) on the AO3400s already bought; optional 24 V build with AOD4184 (footprint decision before layout) |
+| Phase current | **±5 A peak, 3.5 A rms** continuous (sense-limited; AO3400 thermal ≈ 5 A rms) |
 | Current sense | 2 × INA240A1 inline, 15 mΩ (2 × 30 mΩ ‖) per phase |
-| Power | MP1584EN 24→3.3 V direct (no 5 V rail, no LDO); 78L10 10 V gate rail |
+| Power | MP1584EN VBUS→3.3 V direct (no 5 V rail, no LDO); 10 V gate rail (78L10 or zener) |
 | Gate drive | FD6288T, 22 Ω, 400 ns dead time, hardware break on nFAULT |
 | MCU | STM32G431CBT6 @ 170 MHz — CORDIC, FMAC, dual ADC |
 | Encoders | J3: AS5600 (I2C) + NTC on one 5-pin cable · J4/J5: SPI (MT6701 / AS5047P), motor side and output side |
@@ -22,7 +22,7 @@ connector order ST030926127752) with the fewest additional purchases.
 
 ## Read in order
 
-1. [`docs/01-parts-analysis.md`](docs/01-parts-analysis.md) — what the parts on hand can do, sufficiency for 3 boards, the 11-line buy list.
+1. [`docs/01-parts-analysis.md`](docs/01-parts-analysis.md) — what the parts on hand can do, sufficiency for 3 boards, the 8-line buy list.
 2. [`docs/02-hardware-architecture.md`](docs/02-hardware-architecture.md) — block diagram, power tree, gate drive, sensing, connectors, protection.
 3. [`docs/03-pin-assignment.md`](docs/03-pin-assignment.md) — LQFP-48 pin map, the conflicts found (PB8 = BOOT0, PB15 AF4, USART sites) and how each was resolved.
 4. [`docs/04-firmware-capability.md`](docs/04-firmware-capability.md) — loop structure, CPU budget, dual-encoder scheme, bring-up order.
@@ -44,13 +44,14 @@ docs/                     analysis, architecture, decisions
 hardware/bom/             inventory.csv (what exists) · per_board.csv (what spin 1 needs)
 hardware/calc/            design_calcs.py — sense range, FET thermal, buck, gate rail, cap ratings, PWM, CAN load, AS5600-through-cycloidal
 hardware/pinmap/          pinmap.csv — single source of truth for the MCU pins
-firmware/include/         foc_config.h — constants derived from the above (-DBRIDGE_FET_AO3400 for the 16 V build)
+firmware/include/         foc_config.h — constants derived from the above (-DBRIDGE_FET_AOD4184 for the 24 V build)
 tools/                    check_pinmap.py · check_bom.py
 ```
 
 ## Next
 
-- [ ] Confirm the cycloidal ratio and the motor's rated current
-- [ ] Order the buy list (docs/01 §4)
+- [ ] Confirm counts of the bought AO3400 (≥ 18), ERJ8CWFR030V (≥ 12), STM32G431CBT6 (≥ 3)
+- [ ] Confirm the cycloidal ratio and the motor's rated current; decide AO3400/16 V vs AOD4184/24 V before layout
+- [ ] Order the 8-line buy list (docs/01 §4)
 - [ ] KiCad schematic → `hardware/kicad/`, then 2-layer layout
 - [ ] Firmware: HAL init from docs/03 §4, then FOC core

@@ -12,11 +12,11 @@ import math
 # ----------------------------------------------------------------------------
 VDD = 3.3                       # V logic / INA240 / ADC reference
 
-# Bridge FET options.  Spin 1 = AOD4184 (24 V bus).  AO3400A = 16 V build.
+# Bridge FET options.  Spin 1 = AO3400A (bought, 16 V bus).  AOD4184 = optional 24 V upgrade.
 FETS = {
-    "AOD4184  TO-252 (spin 1, 24 V bus)": dict(vds=40.0, rds_10v=0.008, rds_4v5=0.010, qg_10v=40e-9, ciss=2.0e-9,
+    "AOD4184  TO-252 (optional 24 V upgrade)": dict(vds=40.0, rds_10v=0.008, rds_4v5=0.010, qg_10v=40e-9, ciss=2.0e-9,
                                               theta_ja=50.0,  vgs_max=20.0, vbus_full=25.2),
-    "AO3400A  SOT-23 (16 V build)":       dict(vds=30.0, rds_10v=0.028, rds_4v5=0.038, qg_10v=9e-9,  ciss=0.8e-9,
+    "AO3400A  SOT-23 (spin 1, bought, 16 V)": dict(vds=30.0, rds_10v=0.028, rds_4v5=0.038, qg_10v=9e-9,  ciss=0.8e-9,
                                               theta_ja=140.0, vgs_max=12.0, vbus_full=16.8),
 }
 RDS_HOT = 1.5                   # Rds(on) multiplier at Tj ~100 C
@@ -87,11 +87,12 @@ hr("3. 10 V gate rail: 78L10 from VBUS")
 for vb in (13.2, 16.0, 24.0, 25.2):
     i = 0.005 + 0.002
     print(f"VBUS {vb:4.1f} V: dropout {'OK' if vb - GATE_V >= 1.7 else 'DROPOUT'}  P = {(vb-GATE_V)*i*1000:.0f} mW at {i*1000:.0f} mA")
-print("(A 10 V zener + 730 Ohm shunt would need 19 mA at 24 V and starve at 13 V with AOD4184's 5 mA -> use the 78L10.)")
+print("AO3400 build: a 10 V zener + 3x2.2k parallel (733 Ohm) from stock also works: 4.4 mA at 13.2 V, 9 mA at 16.8 V, 63 mW.")
+print("AOD4184 build needs the 78L10 (5 mA gate current would starve the zener at 13 V).")
 
 # ----------------------------------------------------------------------------
 hr("4. Bootstrap capacitor")
-qg = FETS["AOD4184  TO-252 (spin 1, 24 V bus)"]["qg_10v"]
+qg = FETS["AOD4184  TO-252 (optional 24 V upgrade)"]["qg_10v"]
 print(f"Qg 40 nC / 0.5 V droop -> C_boot >= {qg/0.5*1e9:.0f} nF; 1 uF 50 V X7R in stock -> {qg/1e-6*1000:.0f} mV droop per cycle")
 
 # ----------------------------------------------------------------------------
@@ -137,11 +138,13 @@ print("AS5600 default slow-filter latency 2.2 ms; firmware sets CONF SF=2x (0.29
       "the output-side SPI encoder (J5): the motor-side sensor wraps every 1/ratio of a joint turn.")
 
 # ----------------------------------------------------------------------------
-hr("10. Board power budget @ 3.5 A rms, 24 V, AOD4184")
-f = FETS["AOD4184  TO-252 (spin 1, 24 V bus)"]
-p_cond = 3 * 3.5**2 * f["rds_10v"] * RDS_HOT
-p_sw = 6 * 0.5 * 24 * 3.5 * 2 * 3 * 22 * f["ciss"] * PWM_F
-p_sh = 2 * 3.5**2 * SHUNT_R / 2
-p_lg = VDD * LOGIC_LOAD_A + (24 - GATE_V) * 0.007
-print(f"FET conduction {p_cond:.2f} W + switching {p_sw:.2f} W + shunts {p_sh:.2f} W + logic/gate rails {p_lg:.2f} W = {p_cond+p_sw+p_sh+p_lg:.2f} W  "
-      f"(vs ~3.1 W with AO3400 at 16 V) -> 2-layer 2 oz is comfortable")
+hr("10. Board power budget @ 3.5 A rms")
+for fname, vb in (("AO3400A  SOT-23 (spin 1, bought, 16 V)", 16.0), ("AOD4184  TO-252 (optional 24 V upgrade)", 24.0)):
+  f = FETS[fname]
+  p_cond = 3 * 3.5**2 * f["rds_10v"] * RDS_HOT
+  p_sw = 6 * 0.5 * vb * 3.5 * 2 * 3 * 22 * f["ciss"] * PWM_F
+  p_sh = 2 * 3.5**2 * SHUNT_R / 2
+  p_lg = VDD * LOGIC_LOAD_A + (vb - GATE_V) * 0.007
+  print(f"{fname} @ {vb:.0f} V: FET conduction {p_cond:.2f} W + switching {p_sw:.2f} W + shunts {p_sh:.2f} W + rails {p_lg:.2f} W "
+        f"= {p_cond+p_sw+p_sh+p_lg:.2f} W")
+print("-> 2-layer 2 oz; AO3400 needs ~1 in^2 of pour per FET and thermal vias to the bottom ground.")

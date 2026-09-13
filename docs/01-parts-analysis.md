@@ -8,10 +8,11 @@ Source material analysed:
 | `order-ST030926127752-export.xlsx` | Connector / NTC / copper-clad order (JST-XH, JST-VH, MF52E103, headers) |
 | `SimpleFOCMini-1.0.zip` | Reference design: DRV8313 (integrated 2.5 A FETs), 8–24 V, 26×20 mm, EasyEDA + Altium + Gerbers |
 | `LCSampleGerber.zip` | Lion Circuits (Bengaluru) 2-layer sample Gerber — the target fab's file naming and units (imperial, `TOP.GTL/BOTTOM.GBL/OUTLINE.GKO/DRILL.drl`) |
-| user-listed | AO3400 N-FET, ERJ8CWFR030V 30 mΩ shunt, STM32G431CBT6 |
+| user-listed, bought | AO3400 N-FET, ERJ8CWFR030V 30 mΩ shunt, STM32G431CBT6 (evelta) |
 
-Spin-1 decisions (24 V bus with AOD4184, no 5 V rail, AS5600 motors, 2-layer,
-cycloidal actuator, SPI for a second encoder) are recorded in
+Spin-1 decisions (16 V bus on the AO3400s already bought, no 5 V rail, AS5600
+motors, 2-layer, cycloidal actuator, SPI for a second encoder; AOD4184/24 V as
+the optional upgrade) are recorded in
 [06-spin1-decisions.md](06-spin1-decisions.md). All numbers below come from
 `hardware/calc/design_calcs.py`; the sufficiency table from
 `tools/check_bom.py --boards 3`.
@@ -37,8 +38,9 @@ cycloidal actuator, SPI for a second encoder) are recorded in
   CAN). 30 pF is right for the crystal's 20 pF CL.
 * **470 µF 50 V ×6** → two bulk DC-link caps per board, 50 % of rating at
   25.2 V.
-* **10 µF 25 V ×14** → **3.3 V rail only.** They are at 101 % of rating on a
-  full 6S bus. The 100 nF parts are 250 V and the 1 µF are 50 V — those go on
+* **10 µF 25 V ×14** → **3.3 V rail only.** 67 % of rating at 16.8 V is
+  tolerable, 101 % on a full 6S bus is not; keeping them off VBUS keeps the
+  24 V option open. The 100 nF parts are 250 V and the 1 µF are 50 V — those go on
   VBUS.
 * **AO3481 P-FET ×2** → reverse-polarity; dropped (JST-VH is keyed).
 * **MF52E103 NTC ×5** → motor winding temperature, one per board, on the
@@ -51,18 +53,20 @@ cycloidal actuator, SPI for a second encoder) are recorded in
 
 ### 2.1 Power stage
 
-| | AOD4184 (spin 1) | AO3400A (16 V build) |
+| | AO3400A (spin 1 — bought) | AOD4184 (optional 24 V upgrade) |
 |---|---|---|
-| Package | TO-252, 40 V, 8 mΩ @ 10 V, Qg ≈ 40 nC | SOT-23, 30 V, 28 mΩ @ 10 V, Qg ≈ 9 nC |
-| Vds margin at full-charge bus | 14.8 V @ 25.2 V (6S) | 13.2 V @ 16.8 V (4S) — only 4.8 V at 25.2 V → **not for 24 V** |
-| Vgs abs-max vs 10 V gate rail | 20 V — fine | 12 V — 10 V rail is mandatory, 12 V would be at the limit |
-| Thermal continuous phase current | ≈ 15 A rms (not the limit) | ≈ 5 A rms on 2 oz copper; datasheet 5.8 A is a Tc = 25 °C number |
-| Gate-drive current from 10 V rail | 4.8 mA + driver Iq | 1.1 mA + driver Iq |
-| Hand soldering | easy, proper thermal tab | easy, poor thermal path |
+| Package | SOT-23, 30 V, 28 mΩ @ 10 V, Qg ≈ 9 nC | TO-252, 40 V, 8 mΩ @ 10 V, Qg ≈ 40 nC |
+| Vds margin at full-charge bus | 13.2 V @ 16.8 V (4S) — only 4.8 V at 25.2 V → **not for 24 V** | 14.8 V @ 25.2 V (6S) |
+| Vgs abs-max vs 10 V gate rail | 12 V — 10 V rail is mandatory, 12 V would be at the limit | 20 V — fine |
+| Thermal continuous phase current | ≈ 5 A rms on 2 oz copper with ~1 in² pour per FET; datasheet 5.8 A is a Tc = 25 °C number | ≈ 15 A rms (not the limit) |
+| Gate-drive current from 10 V rail | 1.1 mA + driver Iq — a 10 V zener + 3×2.2 k from stock suffices | 4.8 mA + driver Iq — needs the 78L10 |
+| Hand soldering | easy, poor thermal path — rely on copper pour + vias | easy, proper thermal tab |
 
-The AO3400 was the single bottleneck keeping the bus at 16 V. Swapping to a
-TO-252 40 V part unlocks 24 V and removes the FET from the thermal budget for
-~₹10 a piece. Same gate driver, same 10 V rail, same firmware (build flag).
+The AO3400s are bought, so spin 1 uses them at **16 V** and buys nothing for
+the bridge. The one upgrade worth its money later is AOD4184 (TO-252, 40 V):
+24 V bus, FET out of the thermal budget, ~₹10 a piece — but it is a different
+footprint, so it has to be decided before layout. Same driver, same 10 V rail,
+same firmware (`-DBRIDGE_FET_AOD4184`).
 
 ### 2.2 Current sense — INA240A1 (20 V/V) + ERJ8CWFR030V (30 mΩ, 1 W)
 
@@ -79,13 +83,13 @@ INA240 at 3.3 V with REF = VS/2 gives ±1.5 V usable swing:
 
 | Parameter | Value | Set by |
 |---|---|---|
-| DC bus | **24 V** (10–28 V) | AOD4184; MP1584 28 V; 78L10 30 V; caps 50 V |
+| DC bus | **16 V (4S), 12–18 V** | AO3400 30 V Vds. 24 V only with the AOD4184 option |
 | Peak phase current | **±5 A** | INA240 + 15 mΩ |
 | Continuous phase current | **3.5 A rms** | sense range; JST-XH phase pins (3 A) are the next limit |
-| Board dissipation at 3.5 A rms | ≈ 2.6 W | 2-layer 2 oz is comfortable |
+| Board dissipation at 3.5 A rms | ≈ 2.6 W | 2-layer 2 oz, ~1 in² pour + vias per SOT-23 |
 | PWM | 20 kHz centre-aligned, 12.1-bit | TIM1 @ 170 MHz |
 | Dead time | 400 ns + FD6288T internal ~200 ns | |
-| Peak electrical power | ≈ 120 W; ~85 W continuous | a real arm joint through a cycloidal |
+| Peak electrical power | ≈ 80 W; ~55 W continuous (120 W / 85 W at 24 V with AOD4184) | an arm joint through a cycloidal |
 
 ### 2.4 Communication — SN65HVD230 (1 Mbps classic CAN)
 
@@ -120,7 +124,8 @@ the same rail, and 1 MHz ripple is well above the INA240's 400 kHz bandwidth.
 
 | Part | per board | ×3 | on hand | Status |
 |---|---|---|---|---|
-| STM32G431CBT6 | 1 | 3 | ? | buy 4 |
+| STM32G431CBT6 | 1 | 3 | bought | confirm ≥ 3 |
+| AO3400A | 6 | 18 | bought | confirm ≥ 18 |
 | SN65HVD230DR | 1 | 3 | 4 | OK |
 | INA240A1DR | 2 | 6 | 8 | OK |
 | CD43 3.3 µH | 1 | 3 | 4 | OK |
@@ -136,7 +141,7 @@ the same rail, and 1 MHz ripple is well above the INA240's 400 kHz bandwidth.
 | 120 Ω | 1 | 3 | 100 | OK |
 | 0 Ω | 5 | 15 | 44 | OK |
 | Red LED | 2 | 6 | 9 | OK |
-| ERJ8CWFR030V | 4 | 12 | ? | buy 15 |
+| ERJ8CWFR030V | 4 | 12 | bought | confirm ≥ 12 |
 | NTC MF52E103 | 1 | 3 | 5 | OK |
 | JST-VH 2P / XH 3P / XH 5P | 1 each | 3 | 10 / 10 / 5 | OK |
 | 1×40 header | 19 pos | 57 | 160 | OK |
@@ -144,34 +149,39 @@ the same rail, and 1 MHz ripple is well above the INA240's 400 kHz bandwidth.
 
 ## 4. What to buy (blockers)
 
+Everything shared so far — invoice, connector order, AO3400, ERJ8CWFR030V,
+STM32G431CBT6 — is on hand. What is still missing for three boards:
+
 | # | Part | Qty (3 boards + spares) | Why |
 |---|---|---|---|
-| 1 | STM32G431CBT6 | 4 | MCU |
-| 2 | **AOD4184** TO-252 | 24 | bridge FETs for 24 V (AO3400 = 16 V build) |
-| 3 | ERJ8CWFR030V | 15 | 4/board |
-| 4 | **FD6288T** (or EG2133) | 4 | 3-phase bootstrap gate driver, 3.3 V logic, integrated bootstrap diodes + shoot-through lockout |
-| 5 | **78L10** SOT-89/TO-92 | 4 | 10 V gate rail, ~7 mA. A zener shunt needs 19 mA at 24 V and starves at 13 V — use the regulator |
-| 6 | 22 Ω 1206 | 20 | gate resistors (120 Ω from stock costs 0.3–0.4 W/FET switching loss) |
-| 7 | **MP1584EN** | 4 | 24→3.3 V buck |
-| 8 | SS34 | 4 | its catch diode |
-| 9 | 100 kΩ 1206 | 4 | its fsw-set resistor (~1 MHz) |
-| 10 | SMBJ26A | 4 | VBUS hot-plug clamp (SMBJ18A for a 16 V build) |
-| 11 | 2-layer PCB, 2 oz, Lion Circuits | 5 | |
+| 1 | **FD6288T** (or EG2133) | 4 | 3-phase bootstrap gate driver, 3.3 V logic, integrated bootstrap diodes + shoot-through lockout. Nothing bought drives a gate. |
+| 2 | **10 V gate rail**: 78L10, or 10 V zener 1N4740A/BZT52C10 (+ 3×2.2 k from stock) | 4 | FD6288T VCC; must be ≤ 10 V because AO3400 Vgs max is ±12 V |
+| 3 | 22 Ω 1206 | 20 | gate resistors (120 Ω from stock costs 0.3 W/FET switching loss) |
+| 4 | **MP1584EN** | 4 | VBUS→3.3 V buck (the 3.3 µH, caps and FB resistors are in stock) |
+| 5 | SS34 | 4 | its catch diode |
+| 6 | 100 kΩ 1206 | 4 | its fsw-set resistor (~1 MHz) |
+| 7 | SMBJ18A | 4 | VBUS hot-plug clamp (SMBJ26A if built for 24 V) |
+| 8 | 2-layer PCB, 2 oz, Lion Circuits | 5 | |
 
-Nothing else. Encoders come with the motors; magnets are on them.
+Optional, decide before layout (footprint differs): **AOD4184 ×24** for a
+24 V bus. Optional, when the joint encoder is fitted: **MT6701 breakout +
+6 × 2.5 mm diametric magnet ×3** on J5.
+
+Counts to confirm on the bought parts: ≥ 3 STM32G431CBT6, ≥ 18 AO3400,
+≥ 12 ERJ8CWFR030V.
 
 ## 5. The copper-clad boards are not usable for this design
 
 LQFP-48 escape routing, three half-bridges, Kelvin-connected 15 mΩ shunts and a
 1 Mbps CAN pair need two copper layers with a continuous ground pour. A 2-layer
-board from Lion Circuits is fine at 3.5 A rms / 24 V (their 6 mil capability
+board from Lion Circuits is fine at 3.5 A rms / 16 V (their 6 mil capability
 covers the 0.5 mm pitch; ask for 2 oz). Use the copper clad for a test jig.
 
 ## 6. Reference-design comparison (SimpleFOCMini)
 
 | | SimpleFOCMini v1.0 | This design |
 |---|---|---|
-| Driver | DRV8313, integrated FETs | 6 × AOD4184 + FD6288T |
+| Driver | DRV8313, integrated FETs | 6 × AO3400 + FD6288T (AOD4184 option) |
 | Current | 2.5 A/phase, no sensing | ±5 A pk / 3.5 A rms, 2-shunt inline INA240 |
 | MCU | none (external Arduino) | on-board STM32G431 |
 | Interface | 3× PWM + EN pins | CAN 1 Mbps, node-ID straps |

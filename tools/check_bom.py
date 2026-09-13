@@ -26,7 +26,7 @@ def main() -> int:
     if "HDR-1x40-F-SMT" in inv:
         inv["HDR-1x40-F-SMT"]["qty_on_hand"] = str(int(inv["HDR-1x40-F-SMT"]["qty_on_hand"]) * 40)
 
-    rows, blockers, short, tight = [], [], [], []
+    rows, blockers, short, tight, bought = [], [], [], [], []
     for r in need:
         part, per = r["part"], int(r["qty_per_board"])
         total = per * n
@@ -35,6 +35,9 @@ def main() -> int:
         if part not in inv:
             status = "MISSING"
             blockers.append(part)
+        elif have == 0 and "bought" in inv[part]["source"].lower():
+            status = f"BOUGHT — confirm you have ≥ {total}"
+            bought.append(part)
         elif have == 0:
             status = "QTY UNKNOWN (user-supplied)"
             short.append(part)
@@ -53,6 +56,7 @@ def main() -> int:
 
     print()
     print(f"MISSING entirely ({len(blockers)}): " + ", ".join(blockers))
+    print(f"Bought, count to confirm ({len(bought)}): " + ", ".join(bought))
     print(f"SHORT / qty unknown ({len(short)}): " + ", ".join(short))
     print(f"Tight ({len(tight)}): " + ", ".join(tight))
     return 0

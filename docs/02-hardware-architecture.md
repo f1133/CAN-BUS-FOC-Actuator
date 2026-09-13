@@ -4,12 +4,12 @@ One board = one joint. Three identical boards on one CAN bus.
 
 ```
   J1 JST-VH 2P
-  VBUS 24 V ──┬── SMBJ26A ──┬── 2×470 µF 50 V ──┬────────────────────────────────┐
+  VBUS 16 V ──┬── SMBJ18A ──┬── 2×470 µF 50 V ──┬────────────────────────────────┐
   GND ────────┤             │                    │                                │
               │      ┌──────┴──────┐      ┌──────┴──────┐                   ┌─────┴─────┐
               │      │ U7 MP1584EN │      │ U8 78L10    │                   │ 3× half-  │  J2 JST-XH 3P
-              │      │ 24 → 3.3 V  │      │ 10 V gate   │                   │ bridge    │──► A B C
-              │      │ L1 3.3 µH   │      │ rail ~7 mA  │                   │ 6×AOD4184 │
+              │      │ VBUS→3.3 V  │      │ 10 V gate   │                   │ bridge    │──► A B C
+              │      │ L1 3.3 µH   │      │ rail ~3 mA  │                   │ 6×AO3400  │
               │      │ SS34, 100k  │      └──────┬──────┘                   └──┬──┬─────┘
               │      └──────┬──────┘             │ VCC                          │  │
               │            3V3            ┌──────┴────────────┐           2×15 mΩ inline shunt
@@ -35,9 +35,9 @@ One board = one joint. Three identical boards on one CAN bus.
 
 | Rail | Source | Load | Notes |
 |---|---|---|---|
-| VBUS 24 V (10–28 V) | J1 (keyed JST-VH; no reverse-polarity FET) | bridge, buck, 78L10 | SMBJ26A at the connector. 2 × 470 µF 50 V. **Only 50 V / 250 V ceramics on this rail** — the 10 µF are 25 V. 100 nF 250 V at each half-bridge, 1 µF 50 V at the MP1584 input. |
-| 10 V gate | U8 78L10 from VBUS, 100 nF in/out + 1 µF | FD6288T VCC, ~7 mA | ≤ 10 V keeps a 2 V margin under the AO3400's ±12 V Vgs limit if the 16 V build is ever populated; AOD4184 (±20 V) doesn't care. Dropout OK down to 12 V bus. |
-| 3V3 | U7 MP1584EN, L1 CD43 3.3 µH, SS34, RFREQ 100 k (~1 MHz), FB 10 k + 4.7 k / 4.7 k, 10 µF + 1 µF out | MCU, INA240 ×2, CAN, AS5600, SPI encoders, LEDs (~100 mA) | No 5 V rail, no LDO. VDDA through a 0 Ω/ferrite site + 1 µF + 100 nF; VREF+ = VDDA with 1 µF. |
+| VBUS 16 V (12–18 V; 24 V with the AOD4184 option) | J1 (keyed JST-VH; no reverse-polarity FET) | bridge, buck, gate rail | SMBJ18A at the connector (SMBJ26A for 24 V). 2 × 470 µF 50 V. **Only 50 V / 250 V ceramics on this rail** — the 10 µF are 25 V. 100 nF 250 V at each half-bridge, 1 µF 50 V at the MP1584 input. |
+| 10 V gate | U8 78L10 from VBUS (or 10 V zener + 3×2.2 k ‖ from stock), 100 nF + 1 µF | FD6288T VCC, ~3 mA | ≤ 10 V keeps 2 V under the AO3400's ±12 V Vgs limit. Zener shunt works for AO3400 (4.4 mA at 13.2 V); the AOD4184 option needs the 78L10. |
+| 3V3 | U7 MP1584EN, L1 CD43 3.3 µH, SS34, RFREQ 100 k (~1 MHz), FB 10 k + 4.7 k / 4.7 k, 10 µF + 1 µF out | MCU, INA240 ×2, CAN, AS5600, SPI encoders, LEDs (~100 mA) | No 5 V rail, no LDO (AMS1117s stay in the drawer). VDDA through a 0 Ω/ferrite site + 1 µF + 100 nF; VREF+ = VDDA with 1 µF. |
 
 ## 2. Gate driver — FD6288T (EG2133 as alternate)
 
@@ -46,17 +46,19 @@ One board = one joint. Three identical boards on one CAN bus.
 * HIN1-3 ← PA8/PA9/PA10 (TIM1_CH1-3); LIN1-3 ← PB13/PB14/PB15 (CH1N-3N).
   Input polarity is a firmware bit (`TIM1_CCER.CCxNP`), so an active-low LIN
   variant also works.
-* Bootstrap caps 1 µF 50 V (≥ 80 nF needed for 40 nC; 40 mV droop/cycle).
+* Bootstrap caps 1 µF 50 V (≥ 18 nF needed for AO3400's 9 nC, ≥ 80 nF for the AOD4184 option).
 * Gate resistors 22 Ω. nFAULT → PB12 TIM1_BKIN, 10 k pull-up. EN → PB2, 10 k
   pull-**down**.
 
-## 3. Power stage — 6 × AOD4184 (TO-252)
+## 3. Power stage — 6 × AO3400A (SOT-23), bought
 
 * Each half-bridge: 100 nF 250 V across VBUS–GND within 3 mm of the FETs;
-  high-side drain tab on the VBUS pour, low-side source into the bottom-layer
-  ground pour through a via field. At 3.5 A rms: 0.44 W conduction + 1.3 W
-  switching across the six devices.
-* 16 V build: AO3400A on a SOT-23 footprint, same driver and rail; bus ≤ 18 V.
+  high-side drain on the VBUS pour, low-side source into the bottom-layer
+  ground pour through a via field, ~1 in² of 2 oz copper per device. At
+  3.5 A rms: 1.5 W conduction + 0.4 W switching across the six devices.
+  Bus ≤ 18 V (30 V Vds).
+* Optional 24 V build: AOD4184 on a TO-252 footprint, same driver and rail —
+  a footprint decision to make before layout.
 * RC snubber site (10 Ω + 1 nF, DNP) across each low-side FET.
 
 ## 4. Current sense
@@ -100,7 +102,7 @@ boot to cut the default 2.2 ms filter latency to 0.29 ms.
 
 1. **Hardware**: FD6288T shoot-through lockout → TIM1 dead time → nFAULT →
    **TIM1 break** forces all six outputs to idle in one clock, no CPU.
-2. **Firmware (20 kHz)**: |I| > 5.5 A, VBUS outside 10–28 V, NTC > 100 °C,
+2. **Firmware (20 kHz)**: |I| > 5.5 A, VBUS outside 10–20 V (10–28 V with AOD4184), NTC > 100 °C,
    encoder error, AS5600 magnet-status bits → disable / derate.
 3. **CAN**: heartbeat timeout 100 ms → torque off.
 4. **DRV_EN** low through reset (pull-down); asserted only after self-test.

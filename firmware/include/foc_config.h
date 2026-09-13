@@ -46,11 +46,11 @@
 #define NTC_PULLUP_OHM            10000.0f
 
 /* ---- Bus limits — depend on the bridge FET population ------------------ */
-#ifndef BRIDGE_FET_AO3400                    /* default: AOD4184, 40 V, TO-252 */
+#ifdef BRIDGE_FET_AOD4184                    /* optional 24 V build: AOD4184, 40 V, TO-252 */
 #define VBUS_MIN_V                10.0f
 #define VBUS_MAX_V                28.0f
 #define VBUS_NOMINAL_V            24.0f
-#else                                        /* AO3400A, 30 V, SOT-23 build */
+#else                                        /* default: AO3400A, 30 V, SOT-23 (parts on hand) */
 #define VBUS_MIN_V                10.0f
 #define VBUS_MAX_V                20.0f
 #define VBUS_NOMINAL_V            16.0f
