@@ -19,19 +19,19 @@ conflict. **Current result: 38/38 GPIO-capable pins assigned, 0 conflicts.**
 | PB2 | DRV_EN | GPIO out | — | Ordinary pin; external 10 k pull-down keeps the bridge off through reset. |
 | PA0 | ISENSE_A | ADC1_IN1 | — | ADC1 injected rank 1. |
 | PA1 | ISENSE_B | ADC2_IN2 | — | ADC2 injected rank 1 → dual-simultaneous with PA0 on the TIM1 trigger. |
-| PA7 | ISENSE_C (opt) | ADC2_IN4 | — | Reserved for 3-shunt. Doubles as SPI1_MOSI if a 4-wire SPI encoder is ever needed. |
+| PA7 | ENC_MOSI | SPI1_MOSI | 5 | 4-wire SPI encoders (AS5047P). The 3rd-shunt option was dropped: 8 INA240 cannot give 3 per board. |
 | PA2 | VBUS_SENSE | ADC1_IN3 | — | Regular group, DMA. |
 | PA3 | TEMP_NTC | ADC1_IN4 | — | Regular group, DMA. |
-| PA4 | ENC_CS | GPIO out | — | |
+| PA4 | ENC_A_CS | GPIO out | — | J4 SPI_A — motor-side SPI encoder (future upgrade). |
 | PA5 | ENC_SCK | SPI1_SCK | 5 | |
-| PA6 | ENC_MISO | SPI1_MISO | 5 | Receive-only SSI; MOSI not needed. |
+| PA6 | ENC_MISO | SPI1_MISO | 5 | Shared by J4 and J5. |
 | PA11 | CAN_RX | FDCAN1_RX | 9 | Chosen over PB8 (BOOT0 — a CAN RX idles high and would enter the ROM bootloader). |
 | PA12 | CAN_TX | FDCAN1_TX | 9 | |
 | PA13 | SWDIO | SYS | 0 | |
 | PA14 | SWCLK | SYS | 0 | |
 | PB3 | UART_TX | USART2_TX | 7 | Sacrifices SWO; SWD 2-wire is enough. PA2/PA3 (the other USART2 site) are the ADC inputs. |
 | PB4 | UART_RX | USART2_RX | 7 | |
-| PB6 | I2C_SCL | I2C1_SCL | 4 | Alternate encoder (AS5600). PB8/PB9 rejected — BOOT0 again. |
+| PB6 | I2C_SCL | I2C1_SCL | 4 | AS5600 on J3 (default motor-side encoder). PB8/PB9 rejected — BOOT0 again. |
 | PB7 | I2C_SDA | I2C1_SDA | 4 | |
 | PB8 | BOOT0 | — | — | 10 k pull-down + test point. **Nothing else.** |
 | PB9 | STATUS_LED | GPIO out | — | |
@@ -41,7 +41,8 @@ conflict. **Current result: 38/38 GPIO-capable pins assigned, 0 conflicts.**
 | PF0 | OSC_IN | HSE | — | 8 MHz + 30 pF. |
 | PF1 | OSC_OUT | HSE | — | |
 | PG10 | NRST | — | — | |
-| PA15, PB0, PB1, PB5, PB10, PB11 | spare | | | PB0/PB1 are ADC1_IN15/IN12 (2nd NTC or 3rd shunt on ADC1). PB5/PB10/PB11 are the hall/ABZ alternate for J3. |
+| PA15 | ENC_B_CS | GPIO out | — | J5 SPI_B — output-side absolute encoder through the cycloidal. JTDI at reset → 10 k pull-up. |
+| PB0, PB1, PB5, PB10, PB11 | spare | | | PB0/PB1 are ADC1_IN15/IN12 (2nd NTC). PB5/PB10/PB11 for hall/ABZ if ever needed. |
 
 ## 2. Conflicts found and resolved during assignment
 
@@ -65,8 +66,8 @@ These are the real traps on this package; each is a hard error in the checker.
 | TIM1 | 6-ch complementary PWM, dead time, break, ADC trigger (TRGO2) | TIM2/3/4/8/15/16/17 for hall/encoder timing, control-loop tick |
 | ADC1 + ADC2 | injected: Ia/Ib simultaneous; regular: VBUS, NTC, Vrefint, Tsense via DMA | — (G431 has 2 ADCs) |
 | FDCAN1 | bus | — |
-| SPI1 | encoder SSI | SPI2/3 |
-| I2C1 | alt encoder | I2C2/3 |
+| SPI1 | J4 / J5 SPI encoders (two CS lines) | SPI2/3 |
+| I2C1 | AS5600 motor encoder (J3) | I2C2/3 have no free pins on this package — and AS5600's fixed 0x36 address rules out a second one anyway, hence SPI for the joint encoder |
 | USART2 | debug / SimpleFOC commander | USART1/3, LPUART1 |
 | CORDIC | sin/cos, atan2 | — |
 | FMAC | optional IIR on velocity | — |
@@ -83,8 +84,8 @@ ADC1   : injected IN1 (PA0) ext-trig TIM1_TRGO2; regular IN3, IN4, IN16(temp), I
 ADC2   : injected IN2 (PA1), dual mode = regular+injected simultaneous, slave of ADC1
 FDCAN1 : PA11/PA12 AF9, classic CAN, 1 Mbps (8 MHz HSE → PLL → 170 MHz; FDCAN clk = PCLK1 170 MHz,
          prescaler 10 → 17 MHz, TSEG1 13, TSEG2 3, SJW 3 → 1.000 Mbps, sample point 82 %)
-SPI1   : PA5/PA6 AF5, master, 8-bit, CPOL=1 CPHA=1 for MT6701 SSI, ~1 MHz; PA4 GPIO CS
-I2C1   : PB6/PB7 AF4, 400 kHz, only if I2C encoder populated
+SPI1   : PA5/PA6/PA7 AF5, master, ~1 MHz; CS as GPIO: PA4 (J4 motor side), PA15 (J5 output side)
+I2C1   : PB6/PB7 AF4, 400 kHz, AS5600 @0x36; write CONF (SF=2x, FTH=10 LSB) at boot
 USART2 : PB3/PB4 AF7, 115200 8N1 (JTAG disabled → SWD only)
 GPIO   : PB2 out (DRV_EN, init low), PB9 out (LED), PC13/14/15 in pull-down (ID)
 RCC    : HSE 8 MHz bypass=off, PLLM=2 PLLN=85 PLLR=2 → 170 MHz; HSE drive = high (20 pF crystal)

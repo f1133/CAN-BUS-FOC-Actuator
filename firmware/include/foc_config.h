@@ -31,8 +31,8 @@
 #define ISENSE_OFFSET_V_NOMINAL   1.65f                     /* REF = VS/2, auto-cal at boot */
 #define I_MAX_A                   5.0f                      /* amplifier swing limit */
 #define I_TRIP_A                  5.5f                      /* software trip */
-#define I_CONT_A_RMS              3.5f                      /* thermal / connector */
-#define CURRENT_SENSE_PHASES      2                         /* 3 if the PA7 INA240 is populated */
+#define I_CONT_A_RMS              3.5f                      /* sense-range / connector limit */
+#define CURRENT_SENSE_PHASES      2                         /* Ic = -(Ia+Ib); no 3rd INA240 */
 
 /* ---- ADC --------------------------------------------------------------- */
 #define ADC_VREF_V                3.3f
@@ -45,15 +45,31 @@
 #define NTC_BETA                  3950.0f
 #define NTC_PULLUP_OHM            10000.0f
 
-/* ---- Bus limits (AO3400A 30 V) ----------------------------------------- */
+/* ---- Bus limits — depend on the bridge FET population ------------------ */
+#ifndef BRIDGE_FET_AO3400                    /* default: AOD4184, 40 V, TO-252 */
 #define VBUS_MIN_V                10.0f
-#define VBUS_MAX_V                20.0f      /* raise to 28 V only with >= 40 V FETs */
+#define VBUS_MAX_V                28.0f
+#define VBUS_NOMINAL_V            24.0f
+#else                                        /* AO3400A, 30 V, SOT-23 build */
+#define VBUS_MIN_V                10.0f
+#define VBUS_MAX_V                20.0f
 #define VBUS_NOMINAL_V            16.0f
+#endif
 
-/* ---- Encoder ----------------------------------------------------------- */
-#define ENCODER_BITS              14U        /* MT6701 */
-#define ENCODER_CPR               (1U << ENCODER_BITS)
-#define ENCODER_SPI_HZ            1000000UL
+/* ---- Encoders ---------------------------------------------------------- */
+/* Motor side (commutation): AS5600 on I2C1, J3.  Upgrade path: SPI on J4. */
+#define ENC_M_TYPE_AS5600         1
+#define ENC_M_BITS                12U
+#define ENC_M_CPR                 (1U << ENC_M_BITS)
+#define ENC_M_I2C_ADDR            0x36U
+#define ENC_M_I2C_HZ              400000UL
+#define ENC_M_READ_HZ             1000U      /* I2C read rate; angle extrapolated at PWM rate */
+#define AS5600_CONF_SF            3U         /* slow filter 2x -> 0.29 ms latency (default 16x = 2.2 ms) */
+#define AS5600_CONF_FTH           6U         /* fast-filter threshold 10 LSB */
+/* Output side (joint position, absolute through the cycloidal): SPI on J5. */
+#define ENC_J_BITS                14U        /* MT6701 / AS5047P */
+#define ENC_J_SPI_HZ              1000000UL
+#define GEAR_RATIO                15.0f      /* cycloidal — set to the real ratio */
 
 /* ---- CAN --------------------------------------------------------------- */
 #define CAN_BITRATE               1000000UL  /* SN65HVD230 limit */
@@ -72,17 +88,18 @@
 #define PIN_DRV_EN   GPIOB, 2
 #define PIN_ISENSE_A GPIOA, 0    /* ADC1_IN1 */
 #define PIN_ISENSE_B GPIOA, 1    /* ADC2_IN2 */
-#define PIN_ISENSE_C GPIOA, 7    /* ADC2_IN4, optional */
 #define PIN_VBUS     GPIOA, 2    /* ADC1_IN3 */
 #define PIN_NTC      GPIOA, 3    /* ADC1_IN4 */
-#define PIN_ENC_CS   GPIOA, 4
+#define PIN_ENC_A_CS GPIOA, 4    /* J4 SPI_A (motor side, future) */
+#define PIN_ENC_B_CS GPIOA, 15   /* J5 SPI_B (output side) */
 #define PIN_ENC_SCK  GPIOA, 5    /* SPI1 AF5 */
 #define PIN_ENC_MISO GPIOA, 6    /* SPI1 AF5 */
+#define PIN_ENC_MOSI GPIOA, 7    /* SPI1 AF5 */
 #define PIN_CAN_RX   GPIOA, 11   /* FDCAN1 AF9 */
 #define PIN_CAN_TX   GPIOA, 12   /* FDCAN1 AF9 */
 #define PIN_UART_TX  GPIOB, 3    /* USART2 AF7 */
 #define PIN_UART_RX  GPIOB, 4    /* USART2 AF7 */
-#define PIN_I2C_SCL  GPIOB, 6    /* I2C1 AF4 */
+#define PIN_I2C_SCL  GPIOB, 6    /* I2C1 AF4 — AS5600, J3 */
 #define PIN_I2C_SDA  GPIOB, 7    /* I2C1 AF4 */
 #define PIN_LED      GPIOB, 9
 #define PIN_ID0      GPIOC, 13

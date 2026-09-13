@@ -1,34 +1,32 @@
 part,qty_per_board,where_used,in_inventory
-STM32G431CBT6,1,U1 MCU,yes
-SN65HVD230DR,1,U2 CAN transceiver,yes
+STM32G431CBT6,1,U1 MCU,user-supplied
+SN65HVD230DR,1,U2 CAN transceiver (footprint also fits TCAN332 for 5 Mbps FD later),yes
 INA240A1DR,2,U3 U4 phase A/B inline current sense,yes
-AMS1117-3.3,1,U5 3.3 V LDO (from 5 V),yes
-CD43-3R3,1,L1 5 V buck inductor,yes
+CD43-3R3,1,L1 3.3 V buck inductor,yes
 X49SM8MSD2SC,1,Y1 HSE,yes
 C-30p-1206,2,C_Y1a C_Y1b crystal load,yes
 C-470u-50V,2,C_BULK1 C_BULK2 DC link,yes
-C-10u-25V-1206,4,buck in / buck out / LDO out / VDDA,yes
-C-100n-1206,13,MCU VDD x3 VDDA VREF INA240 x2 CAN LDO half-bridge HF x3 NRST,yes
-C-1u-50V-1206,8,VDDA VREF LDO-in bootstrap x3 gate-driver VCC 5V-rail,yes
-R-10k-1206,9,BOOT0 pd DRV_EN pd nFAULT pu NTC bias ID pd x3 VBUS div top x2,yes
-R-4k7-1206,2,I2C pull-ups,yes
-R-2k2-1206,2,LED series; VBUS divider bottom,yes
+C-10u-25V-1206,2,3V3 rail only: buck out + VDDA (25 V parts must NOT go on the 24 V bus),yes
+C-100n-1206,14,MCU VDD x3 VDDA INA240 x2 CAN NRST gate-driver VCC 78L10 in/out half-bridge HF x3 (these are 250 V parts: fine on VBUS),yes
+C-1u-50V-1206,6,VDDA VREF bootstrap x3 MP1584 input (50 V: fine on VBUS),yes
+R-10k-1206,7,BOOT0 pd DRV_EN pd nFAULT pu NTC bias VBUS div top x2 buck FB top,yes
+R-4k7-1206,4,buck FB (10k+4k7 top / 4k7 bottom = 3.30 V) x2; I2C pull-ups x2 (DNP if AS5600 module has them),yes
+R-2k2-1206,6,LED x2 VBUS div bottom ID pull-downs x3,yes
 R-120R-1206,1,CAN termination (via 0R select),yes
-R-0R-1206,8,ID straps x3 CAN-term select encoder-mode select x4,yes
+R-0R-1206,5,ID straps x3 CAN-term select CAN RS/STB-to-GND,yes
 LED-RED-1206,2,status + power,yes
-AO3400A,6,Q1..Q6 three-phase bridge,user-supplied
-ERJ8CWFR030V,4,R_SH_A1 R_SH_A2 R_SH_B1 R_SH_B2 (2 in parallel per phase = 15 mΩ),user-supplied
-AO3481,1,Q7 reverse-polarity P-FET on VBUS,yes
-NTC-MF52E103,1,motor temperature (on encoder/aux connector),yes
+ERJ8CWFR030V,4,R_SH_A1 R_SH_A2 R_SH_B1 R_SH_B2 (2 in parallel per phase = 15 mOhm -> +-5 A),user-supplied
+NTC-MF52E103,1,motor winding temperature on J3 pin 5,yes
 JST-VH-2P-RA,1,J1 power in,yes
-JST-XH-3P-RA,1,J2 motor phases,yes
-JST-XH-5P-RA,1,J3 encoder,yes
-HDR-1x40-F-SMT,7,SWD (4) + UART (3) — cut from strip,yes
-GATE-DRIVER-3PH,1,U6 FD6288T / EG2133 (3-phase bootstrap gate driver),NO — MISSING
-BUCK-IC-24V-5V,1,U7 MP2451 / MP1584EN / TPS54202 (24 V -> 5 V),NO — MISSING
-GATE-RAIL-10V,1,U8 78L10 or 10 V zener + 1 k (gate-drive VCC ~2 mA),NO — MISSING
-R-22R-GATE,6,gate resistors (120 Ω in stock is a slow fallback),NO — MISSING
-TVS-SMBJ26A,1,VBUS clamp (SMBJ26A for 24 V / SMBJ18A for 16 V),NO — MISSING
-D-SS34,1,buck catch diode (only if async buck like MP1584),NO — MISSING
-ENCODER-MT6701,1,14-bit magnetic encoder (SSI) on motor + 6 mm diametric magnet,NO — MISSING
-PCB-4LAYER,1,~50x50 mm 4-layer 2 oz — copper-clad stock is not usable,NO — MISSING
+JST-XH-3P-RA,1,J2 motor phases (3 A/pin — upgrade to JST-VH 3P for sustained 3.5 A rms),yes
+JST-XH-5P-RA,1,J3 AS5600 + NTC: 3V3 GND SCL SDA NTC,yes
+HDR-1x40-F-SMT,19,SWD (4) + UART (3) + J4 SPI_A (6) + J5 SPI_B (6) — cut from strip,yes
+FET-N-BRIDGE,6,Q1..Q6 three-phase bridge: AOD4184 TO-252 40 V (24 V bus) — or AO3400A SOT-23 for a 16 V build,NO — MISSING
+GATE-DRIVER-3PH,1,U6 FD6288T (TSSOP-16) or EG2133,NO — MISSING
+GATE-RAIL-10V,1,U8 78L10 (SOT-89/TO-92) — AOD4184 Qg makes a zener shunt marginal,NO — MISSING
+BUCK-MP1584EN,1,U7 24 V -> 3.3 V direct ~1 MHz,NO — MISSING
+D-SS34,1,buck catch diode,NO — MISSING
+R-100k-1206,1,MP1584 fsw set,NO — MISSING
+R-22R-GATE,6,gate resistors,NO — MISSING
+TVS-SMBJ26A,1,VBUS hot-plug clamp (SMBJ18A for a 16 V build),NO — MISSING
+PCB-2LAYER,1,~60x60 mm 2-layer 2 oz Lion Circuits,NO — MISSING

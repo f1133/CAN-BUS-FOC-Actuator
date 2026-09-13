@@ -1,38 +1,33 @@
 # CAN-BUS FOC Actuator
 
-A compact field-oriented-control BLDC driver for robot-arm joints: on-board
-STM32G431, 2-shunt inline current sensing (INA240), absolute magnetic encoder,
-1 Mbps CAN, three boards on one bus. Designed around the parts already on hand
-(Robu.in invoice 3680169 + connector order ST030926127752 + AO3400 / ERJ8CW /
-STM32G431CBT6).
+A field-oriented-control BLDC driver for cycloidal robot-arm joints: on-board
+STM32G431, 2-shunt inline current sensing (INA240), AS5600 motor encoder plus
+two SPI ports for a joint-side absolute encoder, 1 Mbps CAN, three boards on
+one bus. Designed around the parts already on hand (Robu.in invoice 3680169 +
+connector order ST030926127752) with the fewest additional purchases.
 
-## Design point
+## Spin-1 design point
 
 | | |
 |---|---|
-| DC bus | 12–18 V (4S). 24 V requires ≥ 40 V FETs — AO3400 is 30 V. |
-| Phase current | ±5 A peak, 3.5 A rms continuous |
+| DC bus | **24 V** (10–28 V) with AOD4184 TO-252 FETs; 16 V build option with AO3400 |
+| Phase current | **±5 A peak, 3.5 A rms** continuous (sense-limited; FETs have 3× margin) |
 | Current sense | 2 × INA240A1 inline, 15 mΩ (2 × 30 mΩ ‖) per phase |
-| PWM | TIM1, 20 kHz centre-aligned, 400 ns dead time, hardware break |
+| Power | MP1584EN 24→3.3 V direct (no 5 V rail, no LDO); 78L10 10 V gate rail |
+| Gate drive | FD6288T, 22 Ω, 400 ns dead time, hardware break on nFAULT |
 | MCU | STM32G431CBT6 @ 170 MHz — CORDIC, FMAC, dual ADC |
-| Encoder | MT6701 (SSI) on 5-pin JST-XH; I2C / hall / ABZ selectable by 0 Ω jumpers |
-| Bus | SN65HVD230, classic CAN 1 Mbps, node ID by solder straps |
-| Size | ~50 × 50 mm, 4-layer |
+| Encoders | J3: AS5600 (I2C) + NTC on one 5-pin cable · J4/J5: SPI (MT6701 / AS5047P), motor side and output side |
+| Bus | SN65HVD230 1 Mbps classic CAN (TCAN332 5 Mbps FD drop-in), node ID by solder straps |
+| PCB | ~60 × 60 mm, 2-layer 2 oz, Lion Circuits |
 
-## Status: analysis & architecture complete, schematic next
+## Read in order
 
-Read in order:
-
-1. [`docs/01-parts-analysis.md`](docs/01-parts-analysis.md) — what the parts on
-   hand can do, sufficiency for 3 boards, what is **missing** (gate driver, buck
-   IC, encoder, gate resistors, TVS, 4-layer PCB).
-2. [`docs/02-hardware-architecture.md`](docs/02-hardware-architecture.md) —
-   block diagram, power tree, gate drive, sensing, connectors, protection.
-3. [`docs/03-pin-assignment.md`](docs/03-pin-assignment.md) — full LQFP-48 pin
-   map with the conflicts that were found and how each was resolved.
-4. [`docs/04-firmware-capability.md`](docs/04-firmware-capability.md) — loop
-   structure, CPU budget, feature list, bring-up order.
+1. [`docs/01-parts-analysis.md`](docs/01-parts-analysis.md) — what the parts on hand can do, sufficiency for 3 boards, the 11-line buy list.
+2. [`docs/02-hardware-architecture.md`](docs/02-hardware-architecture.md) — block diagram, power tree, gate drive, sensing, connectors, protection.
+3. [`docs/03-pin-assignment.md`](docs/03-pin-assignment.md) — LQFP-48 pin map, the conflicts found (PB8 = BOOT0, PB15 AF4, USART sites) and how each was resolved.
+4. [`docs/04-firmware-capability.md`](docs/04-firmware-capability.md) — loop structure, CPU budget, dual-encoder scheme, bring-up order.
 5. [`docs/05-can-protocol.md`](docs/05-can-protocol.md) — frame layout.
+6. [`docs/06-spin1-decisions.md`](docs/06-spin1-decisions.md) — the decisions behind spin 1, ranked bottleneck upgrades, first-PCB checklist.
 
 ## Checks
 
@@ -45,17 +40,17 @@ python3 hardware/calc/design_calcs.py  # every number quoted in docs/
 ## Layout
 
 ```
-docs/                     analysis & architecture
-hardware/bom/             inventory.csv (what exists) · per_board.csv (what the design needs)
-hardware/calc/            design_calcs.py — current-sense, thermal, buck, PWM, CAN-load maths
+docs/                     analysis, architecture, decisions
+hardware/bom/             inventory.csv (what exists) · per_board.csv (what spin 1 needs)
+hardware/calc/            design_calcs.py — sense range, FET thermal, buck, gate rail, cap ratings, PWM, CAN load, AS5600-through-cycloidal
 hardware/pinmap/          pinmap.csv — single source of truth for the MCU pins
-firmware/include/         foc_config.h — constants derived from the above
+firmware/include/         foc_config.h — constants derived from the above (-DBRIDGE_FET_AO3400 for the 16 V build)
 tools/                    check_pinmap.py · check_bom.py
 ```
 
 ## Next
 
-- [ ] Confirm quantities of AO3400, ERJ8CWFR030V, STM32G431CBT6
-- [ ] Order the missing parts (docs/01 §4)
-- [ ] KiCad schematic → `hardware/kicad/`
+- [ ] Confirm the cycloidal ratio and the motor's rated current
+- [ ] Order the buy list (docs/01 §4)
+- [ ] KiCad schematic → `hardware/kicad/`, then 2-layer layout
 - [ ] Firmware: HAL init from docs/03 §4, then FOC core

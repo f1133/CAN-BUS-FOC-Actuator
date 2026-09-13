@@ -29,7 +29,7 @@ TIM1 update (20 kHz, counter at top) ──► ADC1/2 injected (Ia, Ib, simultan
                               ADC1_2 JEOS ISR   ← highest priority
                               ┌────────────────────────────────────────┐
                               │ read Ia, Ib; Ic = -Ia-Ib               │
-                              │ read encoder (SPI1 DMA started at top) │
+                              │ θm: AS5600 (1 kHz I2C) + ω·Δt extrap.  │
                               │ θe = (θm - θoffset) * Pp               │
                               │ CORDIC sin/cos θe                      │
                               │ Clarke → Park → Id, Iq                 │
@@ -55,10 +55,11 @@ impedance controller.
 
 | Capability | Status | Notes |
 |---|---|---|
-| Sensored FOC (current / velocity / position) | core | 2-shunt inline, 20 kHz |
+| Sensored FOC (current / velocity / position) | core | 2-shunt inline, 20 kHz. Through a ×15 cycloidal, 360 °/s at the joint is 900 rpm / 105 Hz electrical → ~10 AS5600 reads per electrical cycle: fine for arm speeds; the J4 SPI encoder is the upgrade beyond that. |
 | Torque control from CAN at 1 kHz | core | the robot-arm mode: host runs the arm dynamics, joints run torque + local impedance |
 | Impedance / compliance mode (`τ = Kp(θ*−θ) + Kd(ω*−ω) + τff`) | core | all five params in one 8-byte CAN frame (docs/05) |
-| Absolute position at power-on | core | MT6701 14-bit single-turn + multi-turn counter kept across resets (RTC backup registers, VBAT unused → only across warm resets; for cold-start multi-turn use a joint index or homing) |
+| Absolute position at power-on | core | Output-side SPI encoder on J5 (14-bit, on the joint shaft after the cycloidal). The motor-side AS5600 wraps every 1/ratio of a joint turn, so it cannot provide this alone; without J5 fitted, a homing move is required at boot. |
+| Dual-encoder actuator | core | commutation from the motor-side AS5600 (I2C at 1 kHz, angle extrapolated with ω at 20 kHz); position loop closed on the J5 joint encoder; motor–joint difference = reducer lost motion / compliance estimate |
 | Encoder offset & pole-pair auto-calibration | core | align routine, stores to flash page |
 | Anti-cogging | planned | 1024-entry torque LUT per motor, learned once |
 | Field weakening | planned | free with the Id loop; useful only for high-speed joints |
@@ -75,9 +76,7 @@ cycle. The ISR samples at the counter top (centre of the zero vector), which is
 also the point of least switching noise. No minimum-pulse or duty-window logic
 is needed — the main reason inline sensing is worth the two amplifiers.
 
-Current reconstruction: `Ic = -(Ia + Ib)`. With the 3rd INA240 populated (PA7)
-the firmware switches to 3-shunt automatically (build flag), improving
-accuracy at high modulation.
+Current reconstruction: `Ic = -(Ia + Ib)`. There is no 3rd-shunt option on this board (8 INA240 for 3 boards; PA7 is SPI1_MOSI). Accuracy at high modulation is adequate for the ±5 A / 2.7 mA-LSB design point.
 
 ## 5. Timing constants (also in `firmware/include/foc_config.h`)
 
@@ -95,6 +94,9 @@ accuracy at high modulation.
 | `ISENSE_OFFSET_V` | 1.65 V | REF = VS/2 (auto-calibrated at boot with the bridge disabled) |
 | `I_MAX_A` | 5.0 | INA240 output swing |
 | `I_TRIP_A` | 5.5 | software trip |
+| `ENC_M_READ_HZ` | 1000 | AS5600 I2C read rate; θ extrapolated between reads |
+| `AS5600_CONF_SF` | 2× | 0.29 ms filter latency instead of the default 2.2 ms |
+| `GEAR_RATIO` | cycloidal ratio | joint = motor / ratio when J5 is not fitted |
 | `VBUS_V_PER_LSB` | 0.8057 mV × 22.2 / 2.2 = 8.13 mV | 20 k : 2.2 k divider |
 | `CAN_BITRATE` | 1 000 000 | SN65HVD230 limit |
 | `CAN_HEARTBEAT_TIMEOUT_MS` | 100 | |
@@ -103,7 +105,7 @@ accuracy at high modulation.
 
 1. Power only: 5 V, 3V3, 10 V rails; MCU blink + SWD + UART.
 2. CAN loopback then bus with a USB-CAN dongle at 1 Mbps.
-3. Encoder read over SSI; verify 14-bit angle vs hand rotation.
+3. AS5600 over I2C (write CONF SF = 2×), verify 12-bit angle vs hand rotation; then the J5 SPI encoder if fitted.
 4. INA240 offsets with bridge disabled (expect 1.65 V ± 5 mV).
 5. Open-loop V/f spin at 2 V, 1 A limit; watch phase currents on the debug
    stream — this validates gate polarity, dead-time and current sign.

@@ -7,129 +7,112 @@ Source material analysed:
 | `invoice_3680169.pdf` | Robu.in tax invoice INV2627/228307 (05-Sep-2026): the active/passive parts order |
 | `order-ST030926127752-export.xlsx` | Connector / NTC / copper-clad order (JST-XH, JST-VH, MF52E103, headers) |
 | `SimpleFOCMini-1.0.zip` | Reference design: DRV8313 (integrated 2.5 A FETs), 8–24 V, 26×20 mm, EasyEDA + Altium + Gerbers |
-| `LCSampleGerber.zip` | Lion Circuits (Bengaluru) 2-layer sample Gerber — tells us the target fab's file naming and units (imperial, `TOP.GTL/BOTTOM.GBL/OUTLINE.GKO/DRILL.drl`) |
+| `LCSampleGerber.zip` | Lion Circuits (Bengaluru) 2-layer sample Gerber — the target fab's file naming and units (imperial, `TOP.GTL/BOTTOM.GBL/OUTLINE.GKO/DRILL.drl`) |
 | user-listed | AO3400 N-FET, ERJ8CWFR030V 30 mΩ shunt, STM32G431CBT6 |
 
-All numbers below are produced by `hardware/calc/design_calcs.py`; the
-sufficiency table by `tools/check_bom.py --boards 3`.
+Spin-1 decisions (24 V bus with AOD4184, no 5 V rail, AS5600 motors, 2-layer,
+cycloidal actuator, SPI for a second encoder) are recorded in
+[06-spin1-decisions.md](06-spin1-decisions.md). All numbers below come from
+`hardware/calc/design_calcs.py`; the sufficiency table from
+`tools/check_bom.py --boards 3`.
 
 ---
 
 ## 1. What the parts tell us about the intended design
 
-Reading the invoice as a design, not a list:
-
-* **INA240A1 ×8 + 30 mΩ 1206 shunts** → **inline (phase) current sensing**, not
-  low-side. INA240 exists specifically for this: −4…+80 V common-mode with
-  PWM-edge rejection, so the shunt sits *in the motor phase* and can be sampled
-  at any point in the PWM cycle. That is the single biggest quality upgrade over
-  the SimpleFOCMini reference (which has no current sense at all).
-* **8 INA240 for 3 boards = 2 per board (+2 spare)**. A 3-shunt design would need
-  9. So the design is **2-shunt FOC** (Ia, Ib measured; Ic = −Ia−Ib). That is
-  the standard, fully adequate topology; the third shunt is a reserved option
-  (pin PA7 / ADC2_IN4 is kept free for it).
-* **SN65HVD230 ×4 + 120 Ω ×100** → 3.3 V CAN bus, 3 nodes + spare, termination
-  on the end nodes.
-* **CD43 3.3 µH ×4 + AMS1117-3.3 ×5** → a two-stage logic supply:
-  `24 V → buck → 5 V → LDO → 3.3 V`. 3.3 µH is the right inductor for a
-  ~1.4 MHz 24→5 V buck at a few hundred mA (ΔI ≈ 0.86 A, peak 0.58 A, inside the
-  1 A saturation rating). **It is not** sized for a 24→12 V gate-drive buck.
-* **8 MHz crystal ×6 + 30 pF ×12** → HSE for the MCU. 30 pF load caps are
-  correct for the crystal's 20 pF CL (2 × (20 − ~5 pF stray) = 30 pF). HSE is
-  needed because HSI16 (±1 %) is marginal for 1 Mbps CAN bit timing.
-* **470 µF 50 V ×6** → two bulk DC-link caps per board. 50 V rating on a 24 V
-  bus is a healthy margin.
-* **AO3481 P-FET ×2** → reverse-polarity protection on VBUS. Only two, for three
-  boards.
-* **MF52E103 NTC ×5** → motor winding temperature, one per board.
-* **JST-VH 2-pin (10 A)** → DC input. **JST-XH 3-pin** → motor phases.
-  **JST-XH 5-pin** → encoder.
-* **Single-sided copper clad ×4** → home etching intent. See §5: not viable for
-  this board.
+* **INA240A1 ×8 + 30 mΩ 1206 shunts** → **inline (phase) current sensing**.
+  INA240 exists for exactly this: −4…+80 V common-mode with PWM-edge
+  rejection, so the shunt sits in the motor phase and can be sampled at any
+  point of the PWM cycle. The SimpleFOCMini reference has no current sense at
+  all.
+* **8 INA240 for 3 boards = 2 per board (+2 spare)** → **2-shunt FOC**
+  (Ia, Ib measured; Ic = −Ia−Ib). A 3rd shunt is not possible on three boards.
+* **SN65HVD230 ×4 + 120 Ω ×100** → 3.3 V classic CAN, 3 nodes + spare.
+* **CD43 3.3 µH ×4** → one buck per board. It is sized for a ~1 MHz 24→3.3 V
+  (or 5 V) converter at ≤ 300 mA; not for a 24→12 V gate-drive buck.
+* **AMS1117-3.3 ×5** → the invoice's plan was buck→5 V→LDO. Spin 1 runs the
+  buck straight to 3.3 V and leaves the AMS1117 unused (nothing on the board
+  needs 5 V; everything analog is ratiometric to the same rail).
+* **8 MHz crystal ×6 + 30 pF ×12** → HSE (HSI16 ±1 % is marginal for 1 Mbps
+  CAN). 30 pF is right for the crystal's 20 pF CL.
+* **470 µF 50 V ×6** → two bulk DC-link caps per board, 50 % of rating at
+  25.2 V.
+* **10 µF 25 V ×14** → **3.3 V rail only.** They are at 101 % of rating on a
+  full 6S bus. The 100 nF parts are 250 V and the 1 µF are 50 V — those go on
+  VBUS.
+* **AO3481 P-FET ×2** → reverse-polarity; dropped (JST-VH is keyed).
+* **MF52E103 NTC ×5** → motor winding temperature, one per board, on the
+  encoder cable.
+* **JST-VH 2-pin (10 A)** → DC in. **JST-XH 3-pin** → phases. **JST-XH
+  5-pin** → AS5600 + NTC.
+* **Single-sided copper clad ×4** → not usable for this board (§5).
 
 ## 2. Capability of the board as specified
 
-### 2.1 Power stage — AO3400A (30 V, 28 mΩ @ 10 V, SOT-23)
+### 2.1 Power stage
 
-| Item | Value | Comment |
+| | AOD4184 (spin 1) | AO3400A (16 V build) |
 |---|---|---|
-| Vds max | 30 V | **Margin at 25.2 V (6S full) is 4.8 V.** Switching ringing on a motor half-bridge routinely exceeds that → avalanche. |
-| Thermal continuous phase current | ≈ 4.9 A rms at Vgs = 10 V, ≈ 4.2 A rms at 4.5 V | θJA ≈ 140 °C/W (SOT-23, ~1 in² 2 oz copper), Tj ≤ 125 °C at 40 °C ambient. The datasheet 5.8 A is a Tc = 25 °C number and is not reachable on FR4. |
-| Vgs abs max | **±12 V** | Gate rail must be ≤ 10–11 V. This rules out drivers with a fixed ~12 V+ gate supply. |
-| Qg | ~9 nC @ 10 V | Trivial gate-drive current: 6 × 9 nC × 20 kHz ≈ 1 mA. The gate-drive rail can be a **10 V zener / 78L10**, no buck needed. |
+| Package | TO-252, 40 V, 8 mΩ @ 10 V, Qg ≈ 40 nC | SOT-23, 30 V, 28 mΩ @ 10 V, Qg ≈ 9 nC |
+| Vds margin at full-charge bus | 14.8 V @ 25.2 V (6S) | 13.2 V @ 16.8 V (4S) — only 4.8 V at 25.2 V → **not for 24 V** |
+| Vgs abs-max vs 10 V gate rail | 20 V — fine | 12 V — 10 V rail is mandatory, 12 V would be at the limit |
+| Thermal continuous phase current | ≈ 15 A rms (not the limit) | ≈ 5 A rms on 2 oz copper; datasheet 5.8 A is a Tc = 25 °C number |
+| Gate-drive current from 10 V rail | 4.8 mA + driver Iq | 1.1 mA + driver Iq |
+| Hand soldering | easy, proper thermal tab | easy, poor thermal path |
 
-**Recommendation:** run the bus at **12–18 V (4S)** with these FETs. If you want
-24 V, swap to a ≥ 40 V FET in the same footprint (e.g. AO3420-class is still
-20 V — use a 40/60 V SOT-23 or move to SOT-23-6 / DFN). Everything else in the
-design is 24 V-capable, so the swap is one footprint-compatible part.
+The AO3400 was the single bottleneck keeping the bus at 16 V. Swapping to a
+TO-252 40 V part unlocks 24 V and removes the FET from the thermal budget for
+~₹10 a piece. Same gate driver, same 10 V rail, same firmware (build flag).
 
 ### 2.2 Current sense — INA240A1 (20 V/V) + ERJ8CWFR030V (30 mΩ, 1 W)
 
-INA240 at 3.3 V with REF = VS/2 (REF1 = VS, REF2 = GND) gives ±1.5 V of usable
-output swing:
+INA240 at 3.3 V with REF = VS/2 gives ±1.5 V usable swing:
 
-| Shunt | Sensitivity | Measurable range | ADC LSB | Shunt power at range |
+| Shunt | Sensitivity | Range | ADC LSB | Shunt power at range |
 |---|---|---|---|---|
-| single 30 mΩ | 0.60 V/A | **±2.5 A pk (1.77 A rms)** | 1.3 mA | 0.19 W of 1 W |
-| **2 × 30 mΩ in parallel = 15 mΩ** | 0.30 V/A | **±5.0 A pk (3.54 A rms)** | 2.7 mA | 0.38 W of 2 W |
+| single 30 mΩ | 0.60 V/A | ±2.5 A pk (1.77 A rms) | 1.3 mA | 0.19 W of 1 W |
+| **2 × 30 mΩ ‖ = 15 mΩ (spin 1)** | 0.30 V/A | **±5.0 A pk (3.54 A rms)** | 2.7 mA | 0.38 W of 2 W |
 
-A single 30 mΩ shunt saturates the amplifier at only 2.5 A — below the FETs'
-thermal limit. **Two shunts in parallel per phase (15 mΩ)** gives ±5 A peak,
-which matches the FET thermal limit almost exactly and keeps 2.7 mA resolution.
-The design therefore uses **4 shunts per board, 12 total.**
+"Max spec" = the parallel pair: **12 shunts for 3 boards.**
 
-### 2.3 Resulting design point
+### 2.3 Spin-1 design point
 
 | Parameter | Value | Set by |
 |---|---|---|
-| DC bus | **12–18 V** (24 V only with ≥ 40 V FETs) | AO3400 Vds |
+| DC bus | **24 V** (10–28 V) | AOD4184; MP1584 28 V; 78L10 30 V; caps 50 V |
 | Peak phase current | **±5 A** | INA240 + 15 mΩ |
-| Continuous phase current | **3.5 A rms** | current-sense range (FET thermal allows ~4.9 A) |
-| Board dissipation at 3.5 A rms | ≈ 3.1 W | needs 2 oz copper + thermal vias |
-| PWM | 20 kHz centre-aligned, 12.1-bit duty; 40 kHz possible at 11.1-bit | TIM1 @ 170 MHz |
-| Dead time | 400 ns (68 × tDTS) | AO3400 + 120/22 Ω gate R |
-| Motor size this suits | gimbal / small NEMA17-class BLDC, ~30–80 W joint | |
-
-That is a coherent, useful robot-arm-joint driver. It is not a 24 V / 10 A
-driver, and the parts on hand should not be pushed to pretend it is.
+| Continuous phase current | **3.5 A rms** | sense range; JST-XH phase pins (3 A) are the next limit |
+| Board dissipation at 3.5 A rms | ≈ 2.6 W | 2-layer 2 oz is comfortable |
+| PWM | 20 kHz centre-aligned, 12.1-bit | TIM1 @ 170 MHz |
+| Dead time | 400 ns + FD6288T internal ~200 ns | |
+| Peak electrical power | ≈ 120 W; ~85 W continuous | a real arm joint through a cycloidal |
 
 ### 2.4 Communication — SN65HVD230 (1 Mbps classic CAN)
 
-* Transceiver maxes at 1 Mbps → FDCAN peripheral runs in **classic CAN mode**
-  (or FD with data-phase ≤ 1 Mbps, which gains nothing).
-* Bus load with 3 joints, 1 command + 1 feedback frame each, at 1 kHz:
-  * 8-byte frames: **80 %** → too high.
-  * 4-byte frames: **57 %** → workable.
-* So the protocol (doc 05) uses compact 4–6-byte frames at 1 kHz, or 8-byte at
-  500 Hz feedback. If you later want 5 Mbps CAN-FD, drop in a TCAN1042 /
-  MCP2562FD (same SOIC-8 pinout family) and nothing else changes.
+* 3 joints, 1 kHz: 4-byte command + 8-byte feedback = **68 % bus load**;
+  8 + 8 = 80 %. Protocol (doc 05) keeps commands at 4 bytes.
+* Footprint is made pin-compatible with **TCAN332** (3.3 V, 5 Mbps CAN-FD) for
+  a later upgrade: pin 5 NC, pin 8 to GND through 0 Ω (RS on the HVD230,
+  STB on the TCAN).
 
-### 2.5 Logic supply — AMS1117-3.3
+### 2.5 Logic supply — MP1584EN direct to 3.3 V
 
-| Input | Dissipation @ 150 mA | ΔT (SOT-223, ~60 °C/W) | Verdict |
-|---|---|---|---|
-| 5 V (from buck) | 0.26 W | 15 °C | **OK** |
-| 12 V | 1.30 W | 78 °C | fail |
-| 24 V direct | 3.10 W | 186 °C | fail — and exceeds the 15 V abs-max input |
-
-The AMS1117 **must** hang off the 5 V buck. The buck IC itself is not in the
-order (see §4).
+24→3.3 V at ~1 MHz with the 3.3 µH: t_on = 137 ns (min 100 ns), ripple
+0.86 A pk-pk, inductor peak 0.53 A (Isat 1 A), DCM at the ~100 mA logic load.
+Feedback from stock: 10 k + 4.7 k over 4.7 k → 3.30 V. No 5 V rail, no LDO:
+INA240 REF, VREF+, the NTC divider and the VBUS divider are all ratiometric to
+the same rail, and 1 MHz ripple is well above the INA240's 400 kHz bandwidth.
 
 ### 2.6 Connectors
 
-* JST-VH 2-pin, 3.96 mm, 10 A — correct for DC input.
-* **JST-XH 3-pin for motor phases is rated ~3 A per contact.** That is at the
-  design's 3.5 A rms continuous. Acceptable for a first prototype at ≤ 3 A;
-  for the full 5 A peak / 3.5 A rms use JST-VH 3-pin or screw terminals on the
-  next spin. Flagged, not blocking.
-* **JST-XH 5-pin for the encoder = VCC, GND + 3 signals.** This is enough for:
-  * MT6701 / AS5047 in **SSI/3-wire read-only** mode (CSN, CLK, DO) ✔
-  * AS5600 **I2C** (SCL, SDA + spare) ✔
-  * incremental **ABI/ABZ** ✔ · **hall** sensors ✔
-  * …but **not** full 4-wire SPI (needs MOSI too). The board routes the 3
-    signal pins so that firmware + 0 Ω option jumpers select the mode
-    (doc 03). Recommended encoder: **MT6701 over SSI** (14-bit, 1 MHz clock,
-    no MOSI needed).
+* J1 JST-VH 2-pin — DC in, 10 A. ✔
+* J2 JST-XH 3-pin — phases, ~3 A/pin. Fine for spin 1 at 3.5 A rms bursts;
+  the bottleneck upgrade is a JST-VH 3-pin or 5.08 mm screw terminal.
+* J3 JST-XH 5-pin — **3V3, GND, SCL, SDA, NTC**: one cable to the motor's
+  AS5600 board and the winding thermistor.
+* J4 / J5 1×6 headers (cut from the female strip) — **SPI_A** (motor-side
+  upgrade: MT6701 SSI or AS5047P) and **SPI_B** (output-side absolute encoder
+  through the cycloidal). Shared SCK/MISO/MOSI, separate CS (PA4 / PA15).
 
 ## 3. Sufficiency for 3 boards
 
@@ -137,79 +120,61 @@ order (see §4).
 
 | Part | per board | ×3 | on hand | Status |
 |---|---|---|---|---|
-| STM32G431CBT6 | 1 | 3 | ? | user to confirm — buy 4 |
-| SN65HVD230DR | 1 | 3 | 4 | OK (+1) |
-| INA240A1DR | 2 | 6 | 8 | OK (+2) |
-| AMS1117-3.3 | 1 | 3 | 5 | OK (+2) |
-| CD43 3.3 µH | 1 | 3 | 4 | OK (+1) |
+| STM32G431CBT6 | 1 | 3 | ? | buy 4 |
+| SN65HVD230DR | 1 | 3 | 4 | OK |
+| INA240A1DR | 2 | 6 | 8 | OK |
+| CD43 3.3 µH | 1 | 3 | 4 | OK |
 | 8 MHz SMD crystal | 1 | 3 | 6 | OK |
 | 30 pF | 2 | 6 | 12 | OK |
-| 470 µF 50 V | 2 | 6 | 6 | **OK, zero spare** |
-| 10 µF 25 V 1206 | 4 | 12 | 14 | OK (tight) |
-| 100 nF 1206 | 13 | 39 | 50 | OK |
-| 1 µF 50 V 1206 | 8 | 24 | 22 | **short by 2** (substitute 100 nF for the 5 V-rail ones) |
-| 10 k | 9 | 27 | 30 | OK (tight) |
-| 4.7 k | 2 | 6 | 16 | OK |
-| 2.2 k | 2 | 6 | 100 | OK |
+| 470 µF 50 V | 2 | 6 | 6 | OK, zero spare |
+| 10 µF 25 V (3V3 rail only) | 2 | 6 | 14 | OK |
+| 100 nF 250 V | 14 | 42 | 50 | OK |
+| 1 µF 50 V | 6 | 18 | 22 | OK |
+| 10 k | 7 | 21 | 30 | OK |
+| 4.7 k | 4 | 12 | 16 | OK |
+| 2.2 k | 6 | 18 | 100 | OK |
 | 120 Ω | 1 | 3 | 100 | OK |
-| 0 Ω | 8 | 24 | 44 | OK |
+| 0 Ω | 5 | 15 | 44 | OK |
 | Red LED | 2 | 6 | 9 | OK |
-| **AO3481 P-FET** | 1 | 3 | 2 | **short by 1** |
-| AO3400A | 6 | 18 | ? | user to confirm — buy 24 |
-| ERJ8CWFR030V | 4 | 12 | ? | user to confirm — buy 15 |
+| ERJ8CWFR030V | 4 | 12 | ? | buy 15 |
 | NTC MF52E103 | 1 | 3 | 5 | OK |
-| JST-VH 2P RA | 1 | 3 | 10 | OK |
-| JST-XH 3P RA | 1 | 3 | 10 | OK |
-| JST-XH 5P RA | 1 | 3 | 5 | OK |
-| 1×40 header | 7 pos | 21 | 160 | OK |
+| JST-VH 2P / XH 3P / XH 5P | 1 each | 3 | 10 / 10 / 5 | OK |
+| 1×40 header | 19 pos | 57 | 160 | OK |
+| AMS1117-3.3, AO3481, HC49/U crystals, copper clad | 0 | — | — | not used |
 
-## 4. What is missing (blockers)
+## 4. What to buy (blockers)
 
-These are **not in any of the files** and the board cannot work without them:
+| # | Part | Qty (3 boards + spares) | Why |
+|---|---|---|---|
+| 1 | STM32G431CBT6 | 4 | MCU |
+| 2 | **AOD4184** TO-252 | 24 | bridge FETs for 24 V (AO3400 = 16 V build) |
+| 3 | ERJ8CWFR030V | 15 | 4/board |
+| 4 | **FD6288T** (or EG2133) | 4 | 3-phase bootstrap gate driver, 3.3 V logic, integrated bootstrap diodes + shoot-through lockout |
+| 5 | **78L10** SOT-89/TO-92 | 4 | 10 V gate rail, ~7 mA. A zener shunt needs 19 mA at 24 V and starves at 13 V — use the regulator |
+| 6 | 22 Ω 1206 | 20 | gate resistors (120 Ω from stock costs 0.3–0.4 W/FET switching loss) |
+| 7 | **MP1584EN** | 4 | 24→3.3 V buck |
+| 8 | SS34 | 4 | its catch diode |
+| 9 | 100 kΩ 1206 | 4 | its fsw-set resistor (~1 MHz) |
+| 10 | SMBJ26A | 4 | VBUS hot-plug clamp (SMBJ18A for a 16 V build) |
+| 11 | 2-layer PCB, 2 oz, Lion Circuits | 5 | |
 
-| # | Part | Why | Suggested part (Indian availability) | Qty for 3 |
-|---|---|---|---|---|
-| 1 | **3-phase gate driver** | Six N-FETs need bootstrap high-side drive. Nothing in the order drives a gate. | **FD6288T** (TSSOP-16, integrated bootstrap diodes + shoot-through lockout, 600 V) or **EG2133**. Both take 3.3 V logic. | 3 (+2) |
-| 2 | **5 V buck IC** | The 3.3 µH inductor is there; the switcher isn't. | **MP2451 / MP1584EN** (SOT23-6/SOIC-8, ~1.4 MHz, 24 V in) or TPS54202. | 3 (+2) |
-| 3 | **10 V gate-drive rail** | Gate driver VCC; AO3400 Vgs max is ±12 V so 12 V is too close. Only ~2 mA needed. | **78L10** (SOT-89/TO-92) or 10 V 1 W zener + 1 kΩ from VBUS | 3 |
-| 4 | **Gate resistors 22 Ω** | 120 Ω in stock gives ~290 ns edges and ~0.3–0.4 W switching loss per FET at 20 kHz — usable as a fallback only at ≤ 20 kHz. | 22 Ω 1206 | 18 (+6) |
-| 5 | **Buck catch diode** | Only if an asynchronous buck (MP1584) is chosen. | SS34 (SMA) | 3 |
-| 6 | **VBUS TVS** | 30 V FETs on a motor bus need a clamp. | SMBJ18A (16 V bus) / SMBJ26A (24 V) | 3 |
-| 7 | **Absolute encoder + magnet** | FOC needs rotor angle; a robot arm needs it *absolute at power-on*. Not in any file. | **MT6701** (SSI over the 5-pin JST) + 6 mm diametric magnet | 3 |
-| 8 | **AO3481 ×1 more** | 3rd reverse-polarity FET. (Or drop the P-FET; JST-VH is keyed.) | AO3481 | 1 |
-| 9 | **4-layer PCB** | See §5 | JLCPCB / Lion Circuits 4-layer, 2 oz outer | 5 |
-
-Nice-to-have: 1 µF ×2 more, CAN common-mode choke, polyfuse on VBUS.
+Nothing else. Encoders come with the motors; magnets are on them.
 
 ## 5. The copper-clad boards are not usable for this design
 
-The order includes 4 × single-sided 7.6 × 10 cm copper clad — a home-etch
-intent. This board has an LQFP-48 (0.5 mm pitch), three half-bridges that need
-a solid ground return, two INA240s measuring 15 mΩ (kelvin connections), and a
-1 Mbps CAN pair. That needs:
-
-* ≥ 2 layers for escape routing of the LQFP-48 (realistically 4 for a clean
-  ground plane under the analog front-end),
-* 2 oz copper for the phase pours,
-* thermal vias under the SOT-23s.
-
-Single-sided etching cannot deliver any of that. Use the copper clad for a
-motor-side encoder/NTC breakout or a test jig; order the driver as a 4-layer
-board. The Lion Circuits sample confirms they accept the standard Protel
-extensions, so the KiCad/EasyEDA export will drop straight in.
+LQFP-48 escape routing, three half-bridges, Kelvin-connected 15 mΩ shunts and a
+1 Mbps CAN pair need two copper layers with a continuous ground pour. A 2-layer
+board from Lion Circuits is fine at 3.5 A rms / 24 V (their 6 mil capability
+covers the 0.5 mm pitch; ask for 2 oz). Use the copper clad for a test jig.
 
 ## 6. Reference-design comparison (SimpleFOCMini)
 
 | | SimpleFOCMini v1.0 | This design |
 |---|---|---|
-| Driver | DRV8313, integrated FETs | 6 × AO3400 + FD6288T |
-| Current | 2.5 A/phase, no sensing | 5 A pk / 3.5 A rms, 2-shunt inline INA240 |
+| Driver | DRV8313, integrated FETs | 6 × AOD4184 + FD6288T |
+| Current | 2.5 A/phase, no sensing | ±5 A pk / 3.5 A rms, 2-shunt inline INA240 |
 | MCU | none (external Arduino) | on-board STM32G431 |
-| Interface | 3× PWM + EN pins | CAN bus, 1 Mbps, node-ID straps |
-| Encoder | external | on-board SSI/I2C master, 5-pin JST |
-| Size | 26 × 20 mm, 2-layer | ~50 × 50 mm, 4-layer |
+| Interface | 3× PWM + EN pins | CAN 1 Mbps, node-ID straps |
+| Encoder | external | AS5600 (I2C) + two SPI ports |
+| Size / layers | 26 × 20 mm, 2-layer | ~60 × 60 mm, 2-layer 2 oz |
 | Protection | DRV8313 internal OCP | HW break from driver nFAULT, SW OCP from INA240, TVS, NTC |
-
-The SimpleFOCMini schematic is a useful sanity reference for the DRV8313-era
-signal names used by the SimpleFOC library (EN, IN1-3, nFAULT, nSLEEP, nRESET)
-that the firmware layer keeps compatible with.

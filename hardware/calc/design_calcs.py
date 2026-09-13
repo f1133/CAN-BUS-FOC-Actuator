@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Design-point calculations for the CAN-BUS FOC actuator driver.
+Design-point calculations for the CAN-BUS FOC actuator driver (spin 1).
 
 Every number quoted in docs/ is derived here so it can be re-checked when a
 part changes.  Run:  python3 hardware/calc/design_calcs.py
@@ -10,155 +10,138 @@ import math
 # ----------------------------------------------------------------------------
 # Part parameters (from datasheets / invoice)
 # ----------------------------------------------------------------------------
-VBUS_NOM      = 24.0     # V, target bus (6S Li-ion = 25.2 V full)
-VBUS_ALT      = 16.0     # V, de-rated bus recommended for 30 V FETs (4S = 16.8 V)
-VDD           = 3.3      # V logic / INA240 / ADC reference
+VDD = 3.3                       # V logic / INA240 / ADC reference
 
-# AO3400A N-channel SOT-23 (Alpha & Omega)
-FET_VDS_MAX   = 30.0     # V
-FET_ID_MAX    = 5.8      # A continuous, datasheet, Tc=25C ideal
-FET_RDSON_10V = 0.028    # ohm @ Vgs=10V, 25C
-FET_RDSON_4V5 = 0.038    # ohm @ Vgs=4.5V, 25C
-FET_RDSON_HOT = 1.5      # multiplier at Tj~100C
-FET_QG_4V5    = 5.5e-9   # C total gate charge @4.5V (~9 nC @10V)
-FET_CISS      = 800e-12  # F
-FET_THETA_JA  = 140.0    # C/W, SOT-23 on ~1 in^2 2oz copper (typ 125-160)
-FET_TJ_MAX    = 150.0
+# Bridge FET options.  Spin 1 = AOD4184 (24 V bus).  AO3400A = 16 V build.
+FETS = {
+    "AOD4184  TO-252 (spin 1, 24 V bus)": dict(vds=40.0, rds_10v=0.008, rds_4v5=0.010, qg_10v=40e-9, ciss=2.0e-9,
+                                              theta_ja=50.0,  vgs_max=20.0, vbus_full=25.2),
+    "AO3400A  SOT-23 (16 V build)":       dict(vds=30.0, rds_10v=0.028, rds_4v5=0.038, qg_10v=9e-9,  ciss=0.8e-9,
+                                              theta_ja=140.0, vgs_max=12.0, vbus_full=16.8),
+}
+RDS_HOT = 1.5                   # Rds(on) multiplier at Tj ~100 C
+TJ_LIMIT, T_AMB = 125.0, 40.0
 
 # ERJ8CWFR030V shunt
-SHUNT_R       = 0.030    # ohm
-SHUNT_P_MAX   = 1.0      # W
+SHUNT_R, SHUNT_P_MAX = 0.030, 1.0
 
 # INA240A1
-INA_GAIN      = 20.0     # V/V
-INA_VOUT_HEADROOM = 0.15 # V from each rail, conservative (datasheet: 0.05 typ, 0.2 max)
+INA_GAIN, INA_VOUT_HEADROOM = 20.0, 0.15
 
-# ADC
-ADC_BITS      = 12
+ADC_BITS = 12
 
-# Power path
-BUCK_VOUT     = 5.0
-BUCK_FSW      = 1.4e6    # MP2451 / MP1584 ~1.5 MHz class
-BUCK_L        = 3.3e-6   # CD43 3.3uH from invoice
-BUCK_L_ISAT   = 1.0      # A
-LOGIC_LOAD_A  = 0.15     # MCU 30 mA + CAN 40 mA + 2x INA240 5 mA + encoder 15 mA + LED + margin
-LDO_VIN       = 5.0
-LDO_VOUT      = 3.3
-LDO_THETA_JA  = 60.0     # C/W SOT-223 with copper pour
+# Power path: MP1584EN direct to 3.3 V with the CD43 3.3 uH
+BUCK_VOUT, BUCK_FSW, BUCK_L, BUCK_L_ISAT = 3.3, 1.0e6, 3.3e-6, 1.0
+BUCK_TON_MIN = 100e-9           # MP1584EN
+LOGIC_LOAD_A = 0.10             # MCU 30 mA + CAN ~30 mA avg + 2x INA240 5 mA + AS5600 7 mA + LEDs
+
+# 10 V gate rail (78L10) from VBUS
+GATE_V = 10.0
 
 # MCU / PWM
-FCLK          = 170e6
-PWM_F         = 20e3     # Hz (center-aligned => TIM1 counts up and down)
-DEAD_TIME_S   = 400e-9
+FCLK, PWM_F, DEAD_TIME_S = 170e6, 20e3, 400e-9
 
 # CAN
-CAN_BITRATE   = 1e6
-N_JOINTS      = 3
-CTRL_HZ       = 1000
+CAN_BITRATE, N_JOINTS, CTRL_HZ = 1e6, 3, 1000
+
+# Actuator
+CYCLOIDAL_RATIO = 15            # placeholder — set to the real reducer ratio
+POLE_PAIRS = 7
+AS5600_READ_HZ = 1000           # I2C reads per second the firmware schedules
+
 
 def hr(t):
     print("\n" + "=" * 72 + f"\n{t}\n" + "=" * 72)
 
+
 # ----------------------------------------------------------------------------
 hr("1. Current sensing: INA240A1 + ERJ8CWFR030V (inline / phase)")
-vref = VDD / 2
 swing = VDD / 2 - INA_VOUT_HEADROOM
-for label, r in (("single 30 mOhm", SHUNT_R), ("2x 30 mOhm in parallel = 15 mOhm", SHUNT_R / 2)):
+for label, r, n in (("single 30 mOhm", SHUNT_R, 1), ("2x 30 mOhm parallel = 15 mOhm (spin 1)", SHUNT_R / 2, 2)):
     v_per_a = r * INA_GAIN
     i_pk = swing / v_per_a
-    lsb_a = (VDD / (2 ** ADC_BITS)) / v_per_a
-    p_at_pk = i_pk ** 2 * r
-    n_shunt = 1 if r == SHUNT_R else 2
-    print(f"{label:38s}: {v_per_a:.3f} V/A  -> measurable ±{i_pk:.2f} A pk "
-          f"({i_pk/math.sqrt(2):.2f} A rms)  ADC LSB = {lsb_a*1000:.1f} mA  "
-          f"P_shunt@pk = {p_at_pk:.2f} W of {SHUNT_P_MAX*n_shunt:.0f} W")
+    lsb_a = (VDD / 2 ** ADC_BITS) / v_per_a
+    print(f"{label:42s}: {v_per_a:.2f} V/A -> ±{i_pk:.2f} A pk ({i_pk/math.sqrt(2):.2f} A rms)  "
+          f"LSB {lsb_a*1000:.1f} mA  P_shunt@pk {i_pk**2*r:.2f} W of {SHUNT_P_MAX*n:.0f} W")
+I_PK_DESIGN = swing / (SHUNT_R / 2 * INA_GAIN)
 
 # ----------------------------------------------------------------------------
-hr("2. MOSFET thermal / current limit (AO3400A, SOT-23)")
-for vgs, rds in (("Vgs=10 V", FET_RDSON_10V), ("Vgs=4.5 V", FET_RDSON_4V5)):
-    rds_hot = rds * FET_RDSON_HOT
-    # allowable rise to Tj=125C from 40C ambient
-    p_allow = (125 - 40) / FET_THETA_JA
-    # each phase current flows through exactly one FET of the half-bridge at
-    # any instant, so the average conduction power per FET = I_rms^2 * R / 2
-    # (two FETs share the phase).  Add ~0.1 W switching @20 kHz.
-    p_sw = 0.10
-    i_rms = math.sqrt(max(p_allow - p_sw, 0) * 2 / rds_hot)
-    print(f"{vgs}: Rds(on) hot = {rds_hot*1000:.0f} mOhm, P_allow/FET = {p_allow:.2f} W "
-          f"-> continuous phase current ≈ {i_rms:.1f} A rms ({i_rms*math.sqrt(2):.1f} A pk)")
-print(f"Datasheet Id_max {FET_ID_MAX} A is at Tc=25 C on infinite heatsink — NOT achievable in SOT-23 on FR4.")
-vds_margin_24 = FET_VDS_MAX - 25.2
-vds_margin_16 = FET_VDS_MAX - 16.8
-print(f"Vds margin @ 6S full charge 25.2 V: {vds_margin_24:.1f} V  (ringing easily exceeds this -> AVALANCHE RISK)")
-print(f"Vds margin @ 4S full charge 16.8 V: {vds_margin_16:.1f} V  (acceptable with TVS + snubber)")
+hr("2. Bridge FET thermal / voltage margin")
+for name, f in FETS.items():
+    p_allow = (TJ_LIMIT - T_AMB) / f["theta_ja"]
+    tau = 22 * f["ciss"]; t_sw = 3 * tau
+    p_sw = 0.5 * f["vbus_full"] * 3.5 * 2 * t_sw * PWM_F
+    rds_hot = f["rds_10v"] * RDS_HOT
+    i_rms = math.sqrt(max(p_allow - p_sw, 0) * 2 / rds_hot)     # one FET of the pair conducts at a time
+    print(f"{name}")
+    print(f"   Vds margin at full-charge bus {f['vbus_full']:.1f} V: {f['vds']-f['vbus_full']:.1f} V   "
+          f"Vgs max {f['vgs_max']:.0f} V vs gate rail {GATE_V:.0f} V -> {'OK' if GATE_V <= f['vgs_max']-1 else 'TOO CLOSE'}")
+    print(f"   Rds hot {rds_hot*1000:.0f} mOhm, P_allow/FET {p_allow:.2f} W, P_sw@3.5A,22R {p_sw:.2f} W "
+          f"-> thermal limit ≈ {i_rms:.1f} A rms;  design ±{I_PK_DESIGN:.0f} A pk / {I_PK_DESIGN/math.sqrt(2):.1f} A rms is "
+          f"{'FET-limited' if i_rms < I_PK_DESIGN/math.sqrt(2) else 'sense-limited (FET has margin)'}")
+    ig = 6 * f["qg_10v"] * PWM_F
+    print(f"   gate-drive current 6 x Qg x f = {ig*1000:.1f} mA (+ driver Iq ~2 mA) from the 10 V rail")
 
 # ----------------------------------------------------------------------------
-hr("3. Switching loss vs gate resistor (why 120 Ohm is a fallback, not a choice)")
-for rg in (10, 22, 47, 120):
-    tau = rg * FET_CISS
-    t_sw = 3 * tau                         # ~3 tau to complete the Miller plateau, crude
-    # P_sw = 0.5 * V * I * (t_on + t_off) * f   per FET, hard switching
-    for vb in (VBUS_ALT, VBUS_NOM):
-        p_sw = 0.5 * vb * 3.0 * (2 * t_sw) * PWM_F
-        print(f"Rg={rg:4d} Ohm  Vbus={vb:4.0f} V: t_sw≈{t_sw*1e9:5.0f} ns  P_sw/FET @3 A,{PWM_F/1e3:.0f} kHz ≈ {p_sw:.2f} W", end="   ")
-    print()
+hr("3. 10 V gate rail: 78L10 from VBUS")
+for vb in (13.2, 16.0, 24.0, 25.2):
+    i = 0.005 + 0.002
+    print(f"VBUS {vb:4.1f} V: dropout {'OK' if vb - GATE_V >= 1.7 else 'DROPOUT'}  P = {(vb-GATE_V)*i*1000:.0f} mW at {i*1000:.0f} mA")
+print("(A 10 V zener + 730 Ohm shunt would need 19 mA at 24 V and starve at 13 V with AOD4184's 5 mA -> use the 78L10.)")
 
 # ----------------------------------------------------------------------------
-hr("4. Gate-driver bootstrap capacitor")
-qg_10v = 9e-9
-c_boot_min = qg_10v / 0.5     # allow 0.5 V droop per cycle
-print(f"Qg(10V) ≈ {qg_10v*1e9:.0f} nC -> C_boot ≥ {c_boot_min*1e9:.0f} nF; use 100 nF–1 µF X7R (1 µF 50 V in stock ✔)")
+hr("4. Bootstrap capacitor")
+qg = FETS["AOD4184  TO-252 (spin 1, 24 V bus)"]["qg_10v"]
+print(f"Qg 40 nC / 0.5 V droop -> C_boot >= {qg/0.5*1e9:.0f} nF; 1 uF 50 V X7R in stock -> {qg/1e-6*1000:.0f} mV droop per cycle")
 
 # ----------------------------------------------------------------------------
-hr("5. Buck 24 V -> 5 V with CD43 3.3 µH")
-for vin in (VBUS_NOM, VBUS_ALT):
+hr("5. Buck MP1584EN 24 V -> 3.3 V direct with CD43 3.3 uH (no 5 V rail, no LDO)")
+for vin in (24.0, 16.0, 12.0):
     d = BUCK_VOUT / vin
+    t_on = d / BUCK_FSW
     di = (vin - BUCK_VOUT) * d / (BUCK_FSW * BUCK_L)
     i_pk = LOGIC_LOAD_A + di / 2
-    print(f"Vin={vin:4.1f} V D={d:.2f}: ΔI_L = {di:.2f} A pk-pk  I_L,pk @ {LOGIC_LOAD_A*1000:.0f} mA load = {i_pk:.2f} A "
-          f"({'OK' if i_pk < BUCK_L_ISAT else 'EXCEEDS Isat'} vs Isat {BUCK_L_ISAT} A) -> {'CCM' if di/2 < LOGIC_LOAD_A else 'DCM'}")
-print("Conclusion: 3.3 µH is sized for a ~1.4 MHz 24->5 V converter at a few hundred mA (the logic rail).")
-print("            It is NOT suitable as a 24->12 V gate-drive buck at 500 kHz (ΔI > 3 A).")
+    print(f"Vin {vin:4.1f} V: D {d:.3f}  t_on {t_on*1e9:4.0f} ns ({'OK' if t_on > BUCK_TON_MIN*1.2 else 'near min on-time'})  "
+          f"ΔI {di:.2f} A pk-pk  I_L,pk {i_pk:.2f} A ({'OK' if i_pk < BUCK_L_ISAT else 'EXCEEDS Isat'})  {'DCM' if di/2 > LOGIC_LOAD_A else 'CCM'}")
+print("FB divider from stock: R_top = 10k + 4.7k, R_bot = 4.7k -> Vout = 0.8 x (1 + 14.7/4.7) = "
+      f"{0.8*(1+14.7/4.7):.2f} V")
+print("Why no LDO: everything analog (INA240 REF=VS/2, VREF+, NTC, VBUS divider) is ratiometric to the same 3V3, "
+      "so buck DC tolerance cancels; 1 MHz ripple is far above the INA240 400 kHz bandwidth.")
 
-hr("6. LDO AMS1117-3.3 dissipation")
-for vin, label in ((LDO_VIN, "from 5 V buck"), (12.0, "from 12 V"), (VBUS_NOM, "DIRECT from 24 V bus")):
-    p = (vin - LDO_VOUT) * LOGIC_LOAD_A
-    dt = p * LDO_THETA_JA
-    ok = "OK" if (dt < 60 and vin <= 15) else "FAIL"
-    note = " (exceeds 15 V abs-max input!)" if vin > 15 else ""
-    print(f"{label:22s}: P = {p:.2f} W  ΔT ≈ {dt:.0f} °C  -> {ok}{note}")
+# ----------------------------------------------------------------------------
+hr("6. Capacitor voltage ratings on the 24 V bus")
+for name, vr in (("10 uF 25 V X7R (CL31B106KAHNNNE)", 25), ("1 uF 50 V X7R", 50), ("100 nF 250 V X7R", 250), ("470 uF 50 V electrolytic", 50)):
+    print(f"{name:36s}: {25.2/vr*100:3.0f} % of rating at 25.2 V -> {'DO NOT use on VBUS' if 25.2/vr > 0.8 else 'OK on VBUS'}")
 
 # ----------------------------------------------------------------------------
 hr("7. TIM1 PWM configuration @170 MHz")
-arr = FCLK / (2 * PWM_F)           # center-aligned counts up to ARR then down
-res_bits = math.log2(arr)
-dtg = DEAD_TIME_S * FCLK           # DTG steps of 1/170 MHz for DTG[7:5]=0xx
-print(f"PWM {PWM_F/1e3:.0f} kHz center-aligned: ARR = {arr:.0f}  -> {res_bits:.1f} bits duty resolution")
-print(f"Dead-time {DEAD_TIME_S*1e9:.0f} ns = {dtg:.0f} tDTS steps (fits DTG[7:5]=0xx range, ≤127 steps)")
-arr40 = FCLK / (2 * 40e3)
-print(f"PWM 40 kHz alternative: ARR = {arr40:.0f} -> {math.log2(arr40):.1f} bits")
+arr = FCLK / (2 * PWM_F); dtg = DEAD_TIME_S * FCLK
+print(f"PWM {PWM_F/1e3:.0f} kHz centre-aligned: ARR = {arr:.0f} -> {math.log2(arr):.1f} bits;  dead-time {DEAD_TIME_S*1e9:.0f} ns = {dtg:.0f} tDTS (+ FD6288T internal ~200 ns)")
 
 # ----------------------------------------------------------------------------
-hr("8. CAN bus load: SN65HVD230 @ 1 Mbps classic CAN")
-def frame_bits(dlc, ext=False, stuff=1.2):
-    overhead = 47 if not ext else 67   # SOF..EOF+IFS for 11-bit / 29-bit
-    return (overhead + 8 * dlc) * stuff
-for dlc in (8, 4):
-    fb = frame_bits(dlc)
-    t_frame = fb / CAN_BITRATE
-    frames_per_cycle = N_JOINTS * 2      # command + feedback per joint
-    load = frames_per_cycle * t_frame * CTRL_HZ
-    print(f"DLC={dlc}: ≈{fb:.0f} bits ({t_frame*1e6:.0f} µs)  {frames_per_cycle} frames/cycle @ {CTRL_HZ} Hz -> bus load {load*100:.0f}%")
-print("Rule of thumb: keep < 60-70 %. 8-byte frames at 1 kHz are too much for 3 joints; use 4-6 byte frames or 500 Hz feedback.")
+hr("8. CAN bus load: SN65HVD230 @ 1 Mbps classic CAN, 3 joints, 1 kHz")
+def frame_bits(dlc, stuff=1.2): return (47 + 8 * dlc) * stuff
+for cmd, fb in ((4, 8), (8, 8)):
+    t = (frame_bits(cmd) + frame_bits(fb)) / CAN_BITRATE
+    print(f"cmd DLC {cmd} + feedback DLC {fb}: {N_JOINTS*t*CTRL_HZ*100:.0f} % bus load")
 
 # ----------------------------------------------------------------------------
-hr("9. Board power budget @ 3.5 A rms phase current (16 V bus)")
-i = 3.5
-p_cond = 3 * i**2 * FET_RDSON_10V * FET_RDSON_HOT     # 3 phases, one FET conducting each
-p_sw   = 6 * 0.08
-p_shunt = 2 * i**2 * (SHUNT_R / 2)
-p_ldo  = (LDO_VIN - LDO_VOUT) * LOGIC_LOAD_A
-p_logic = VDD * LOGIC_LOAD_A
-total = p_cond + p_sw + p_shunt + p_ldo + p_logic
-print(f"FET conduction {p_cond:.2f} W + switching {p_sw:.2f} W + shunts {p_shunt:.2f} W + LDO {p_ldo:.2f} W + logic {p_logic:.2f} W = {total:.2f} W")
-print("-> needs 2 oz copper, thermal vias under FETs, and the FETs spread over ≥ 6 cm² of pour.")
+hr("9. AS5600 through a cycloidal reducer — where the I2C encoder becomes the bottleneck")
+for joint_dps in (60, 180, 360):
+    motor_rpm = joint_dps / 360 * 60 * CYCLOIDAL_RATIO
+    f_e = motor_rpm / 60 * POLE_PAIRS
+    print(f"joint {joint_dps:3d} °/s x{CYCLOIDAL_RATIO}: motor {motor_rpm:5.0f} rpm, electrical {f_e:5.1f} Hz, "
+          f"{AS5600_READ_HZ/f_e:5.1f} AS5600 reads per electrical cycle "
+          f"({'fine' if AS5600_READ_HZ/f_e >= 8 else 'marginal — velocity extrapolation needed' if AS5600_READ_HZ/f_e >= 4 else 'upgrade to SPI encoder'})")
+print("AS5600 default slow-filter latency 2.2 ms; firmware sets CONF SF=2x (0.29 ms).  Joint-absolute position needs "
+      "the output-side SPI encoder (J5): the motor-side sensor wraps every 1/ratio of a joint turn.")
+
+# ----------------------------------------------------------------------------
+hr("10. Board power budget @ 3.5 A rms, 24 V, AOD4184")
+f = FETS["AOD4184  TO-252 (spin 1, 24 V bus)"]
+p_cond = 3 * 3.5**2 * f["rds_10v"] * RDS_HOT
+p_sw = 6 * 0.5 * 24 * 3.5 * 2 * 3 * 22 * f["ciss"] * PWM_F
+p_sh = 2 * 3.5**2 * SHUNT_R / 2
+p_lg = VDD * LOGIC_LOAD_A + (24 - GATE_V) * 0.007
+print(f"FET conduction {p_cond:.2f} W + switching {p_sw:.2f} W + shunts {p_sh:.2f} W + logic/gate rails {p_lg:.2f} W = {p_cond+p_sw+p_sh+p_lg:.2f} W  "
+      f"(vs ~3.1 W with AO3400 at 16 V) -> 2-layer 2 oz is comfortable")
