@@ -9,16 +9,16 @@ conflict. **Current result: 38/38 GPIO-capable pins assigned, 0 conflicts.**
 
 | Pin | Signal | Peripheral | AF | Why this pin |
 |---|---|---|---|---|
-| PA8 | PWM_AH | TIM1_CH1 | 6 | Only TIM1_CH1-3 location on LQFP-48 (PC0-2 are not bonded). |
-| PA9 | PWM_BH | TIM1_CH2 | 6 | |
-| PA10 | PWM_CH | TIM1_CH3 | 6 | |
-| PB13 | PWM_AL | TIM1_CH1N | 6 | PB13-15 chosen over PA7/PB0/PB1 so those stay free as ADC inputs. |
-| PB14 | PWM_BL | TIM1_CH2N | 6 | |
-| PB15 | PWM_CL | TIM1_CH3N | **4** | Note: AF4 on this pin, not AF6. |
-| PB12 | DRV_nFAULT | TIM1_BKIN | 6 | Hardware break. PB8 (AF12) was rejected — it is BOOT0. |
-| PB2 | DRV_EN | GPIO out | — | Ordinary pin; external 10 k pull-down keeps the bridge off through reset. |
-| PA0 | ISENSE_A | ADC1_IN1 | — | ADC1 injected rank 1. |
-| PA1 | ISENSE_B | ADC2_IN2 | — | ADC2 injected rank 1 → dual-simultaneous with PA0 on the TIM1 trigger. |
+| PA8 | PWM_A | TIM1_CH1 | 6 | → Mini H1.3 IN1. Only TIM1_CH1-3 location on LQFP-48 (PC0-2 are not bonded). |
+| PA9 | PWM_B | TIM1_CH2 | 6 | → Mini H1.5 IN2. |
+| PA10 | PWM_C | TIM1_CH3 | 6 | → Mini H1.7 IN3. 3-PWM: the DRV8313 makes the complementary edge and dead time. |
+| PB14 | DRV_nSLEEP | GPIO out | — | → Mini H1.8 (10 k pull-up on the Mini). Spin 2: TIM1_CH2N AF6. |
+| PB15 | DRV_nRESET | GPIO out | — | → Mini H1.6 (10 k pull-up on the Mini). Spin 2: TIM1_CH3N **AF4**, not AF6. |
+| PB13 | spare | — | — | Spin 2: TIM1_CH1N AF6. |
+| PB12 | DRV_nFAULT | TIM1_BKIN | 6 | ← Mini H1.10. Hardware break. PB8 (AF12) was rejected — it is BOOT0. |
+| PB2 | DRV_EN | GPIO out | — | → Mini H1.9. External 10 k pull-down keeps the bridge off through reset. |
+| PA0 | ISENSE_A | ADC1_IN1 | — | INA240 on the 30 mΩ between Mini OUT1 and J2.A. ADC1 injected rank 1. |
+| PA1 | ISENSE_B | ADC2_IN2 | — | INA240 on the 30 mΩ between Mini OUT2 and J2.B. ADC2 injected rank 1 → dual-simultaneous with PA0. |
 | PA7 | ENC_MOSI | SPI1_MOSI | 5 | 4-wire SPI encoders (AS5047P). The 3rd-shunt option was dropped: 8 INA240 cannot give 3 per board. |
 | PA2 | VBUS_SENSE | ADC1_IN3 | — | Regular group, DMA. |
 | PA3 | TEMP_NTC | ADC1_IN4 | — | Regular group, DMA. |
@@ -42,7 +42,7 @@ conflict. **Current result: 38/38 GPIO-capable pins assigned, 0 conflicts.**
 | PF1 | OSC_OUT | HSE | — | |
 | PG10 | NRST | — | — | |
 | PA15 | ENC_B_CS | GPIO out | — | J5 SPI_B — output-side absolute encoder through the cycloidal. JTDI at reset → 10 k pull-up. |
-| PB0, PB1, PB5, PB10, PB11 | spare | | | PB0/PB1 are ADC1_IN15/IN12 (2nd NTC). PB5/PB10/PB11 for hall/ABZ if ever needed. |
+| PB0, PB1, PB5, PB10, PB11, PB13 | spare | | | PB0/PB1 are ADC1_IN15/IN12 (2nd NTC). PB5/PB10/PB11 for hall/ABZ if ever needed. |
 
 ## 2. Conflicts found and resolved during assignment
 
@@ -51,8 +51,8 @@ These are the real traps on this package; each is a hard error in the checker.
 | Trap | Effect if ignored | Resolution |
 |---|---|---|
 | **PB8 = BOOT0 on LQFP-48.** FDCAN1_RX (AF9), I2C1_SCL (AF4) and TIM1_BKIN (AF12) all live there and all idle **high**. | MCU samples BOOT0 = 1 at reset → boots into the ROM bootloader, firmware never runs (intermittently, depending on whether the bus/cable is connected). | CAN on PA11/PA12, I2C on PB6/PB7, BKIN on PB12. PB8 is BOOT0 only, with a pull-down. |
-| TIM1_CH1N-3N have two full sets: PA7/PB0/PB1 (AF6) and PB13/PB14/PB15 (AF6/6/4). | Using the PA7/PB0/PB1 set eats three of the best ADC pins (ADC2_IN4, ADC1_IN15, ADC1_IN12). | Use PB13/14/15. |
-| PB15 TIM1_CH3N is **AF4**, the other five TIM1 pins are AF6. | Wrong AF = phase C low-side never switches; motor "works" on two phases and cooks. | Documented; checker enforces the per-pin AF number. |
+| (Spin 2) TIM1_CH1N-3N have two full sets: PA7/PB0/PB1 (AF6) and PB13/PB14/PB15 (AF6/6/4). | Using the PA7/PB0/PB1 set eats three of the best ADC/SPI pins. | Reserve PB13/14/15; in spin 1 they carry nSLEEP/nRESET, which a 6-PWM spin 2 would move. |
+| (Spin 2) PB15 TIM1_CH3N is **AF4**, the other five TIM1 pins are AF6. | Wrong AF = phase C low-side never switches. | Documented; checker enforces the per-pin AF number. |
 | USART2 default site PA2/PA3 collides with the analog inputs. | | USART2 on PB3/PB4 (AF7). PB3/PB4 are JTAG pins at reset — firmware selects SWD-only, then they are free. |
 | USART1 default PA9/PA10 collides with TIM1_CH2/CH3. | | Not used. |
 | Dual-simultaneous ADC needs one shunt on ADC1 and one on ADC2 with no shared channel. | Sequential sampling adds ~1 µs skew between Ia and Ib → torque ripple. | PA0 → ADC1_IN1, PA1 → ADC2_IN2 (checker asserts this). |
@@ -63,7 +63,7 @@ These are the real traps on this package; each is a hard error in the checker.
 
 | Peripheral | Used for | Free instances |
 |---|---|---|
-| TIM1 | 6-ch complementary PWM, dead time, break, ADC trigger (TRGO2) | TIM2/3/4/8/15/16/17 for hall/encoder timing, control-loop tick |
+| TIM1 | 3-ch PWM into the Mini (IN1-3), break on nFAULT, ADC trigger (TRGO2); CH1N-3N + dead time reserved for spin 2 | TIM2/3/4/8/15/16/17 for hall/encoder timing, control-loop tick |
 | ADC1 + ADC2 | injected: Ia/Ib simultaneous; regular: VBUS, NTC, Vrefint, Tsense via DMA | — (G431 has 2 ADCs) |
 | FDCAN1 | bus | — |
 | SPI1 | J4 / J5 SPI encoders (two CS lines) | SPI2/3 |
@@ -78,8 +78,8 @@ These are the real traps on this package; each is a hard error in the checker.
 ## 4. Firmware-side pin config summary (for the HAL / CubeMX)
 
 ```
-TIM1   : CH1/CH2/CH3 + CH1N/CH2N/CH3N, center-aligned mode 1, ARR=4250 (20 kHz),
-         DTG=68 (400 ns), BKIN active-low on PB12, TRGO2 = OC4REF (ADC trigger at counter top)
+TIM1   : CH1/CH2/CH3 only (3-PWM into the DRV8313; no CHxN, DTG=0), center-aligned mode 1, ARR=4250 (20 kHz),
+         BKIN active-low on PB12, TRGO2 = OC4REF (ADC trigger at counter top)
 ADC1   : injected IN1 (PA0) ext-trig TIM1_TRGO2; regular IN3, IN4, IN16(temp), IN18(Vrefint) DMA circular
 ADC2   : injected IN2 (PA1), dual mode = regular+injected simultaneous, slave of ADC1
 FDCAN1 : PA11/PA12 AF9, classic CAN, 1 Mbps (8 MHz HSE → PLL → 170 MHz; FDCAN clk = PCLK1 170 MHz,
@@ -87,6 +87,6 @@ FDCAN1 : PA11/PA12 AF9, classic CAN, 1 Mbps (8 MHz HSE → PLL → 170 MHz; FDCA
 SPI1   : PA5/PA6/PA7 AF5, master, ~1 MHz; CS as GPIO: PA4 (J4 motor side), PA15 (J5 output side)
 I2C1   : PB6/PB7 AF4, 400 kHz, AS5600 @0x36; write CONF (SF=2x, FTH=10 LSB) at boot
 USART2 : PB3/PB4 AF7, 115200 8N1 (JTAG disabled → SWD only)
-GPIO   : PB2 out (DRV_EN, init low), PB9 out (LED), PC13/14/15 in pull-down (ID)
+GPIO   : PB2 out (DRV_EN, init low), PB14 out (nSLEEP), PB15 out (nRESET), PB9 out (LED), PC13/14/15 in pull-down (ID)
 RCC    : HSE 8 MHz bypass=off, PLLM=2 PLLN=85 PLLR=2 → 170 MHz; HSE drive = high (20 pF crystal)
 ```

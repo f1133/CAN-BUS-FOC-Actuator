@@ -1,9 +1,10 @@
 /**
  * foc_config.h — board-level constants for the CAN-BUS FOC actuator.
  *
- * Every value here is derived in hardware/calc/design_calcs.py and documented in
- * docs/04-firmware-capability.md §5.  Change the hardware -> change the script
- * -> change this file.  Nothing in the control code hard-codes these.
+ * Spin 1: STM32G431 carrier with a SimpleFOC Mini (DRV8313) as the power
+ * stage.  Every value is derived in hardware/calc/design_calcs.py and
+ * documented in docs/04-firmware-capability.md §5.  Build with
+ * -DBRIDGE_DISCRETE for the spin-2 6-PWM bridge (docs/06).
  */
 #ifndef FOC_CONFIG_H
 #define FOC_CONFIG_H
@@ -15,42 +16,62 @@
 /* ---- PWM / TIM1 -------------------------------------------------------- */
 #define PWM_FREQ_HZ               20000U
 #define TIM1_ARR                  (SYSCLK_HZ / (2U * PWM_FREQ_HZ))   /* 4250, centre-aligned */
+#define PWM_MAX_DUTY              0.96f
+
+#ifndef BRIDGE_DISCRETE
+/* SimpleFOC Mini / DRV8313: 3-PWM + EN.  Dead time is inside the DRV8313. */
+#define DRIVER_3PWM               1
+#define TIM1_DTG                  0U
+#else
+/* Spin 2: FD6288T + discrete FETs, 6-PWM with complementary outputs. */
+#define DRIVER_6PWM               1
 #define DEAD_TIME_NS              400U
 #define TIM1_DTG                  ((DEAD_TIME_NS * (SYSCLK_HZ / 1000000UL)) / 1000U) /* 68 */
-#define PWM_MAX_DUTY              0.96f       /* leave bootstrap refresh time */
+#endif
 
 /* ---- Loop rates -------------------------------------------------------- */
 #define CURRENT_LOOP_HZ           PWM_FREQ_HZ
 #define VELOCITY_LOOP_DIV         5U          /* 4 kHz  */
 #define POSITION_LOOP_DIV         20U         /* 1 kHz  */
 
-/* ---- Current sense: INA240A1 (20 V/V) + 2 x ERJ8CWFR030V parallel ------- */
-#define SHUNT_OHM                 0.015f
+/* ---- Current sense: INA240A1 (20 V/V) + ERJ8CWFR030V inline ------------ */
 #define CSA_GAIN                  20.0f
-#define ISENSE_V_PER_A            (SHUNT_OHM * CSA_GAIN)    /* 0.30 V/A */
-#define ISENSE_OFFSET_V_NOMINAL   1.65f                     /* REF = VS/2, auto-cal at boot */
-#define I_MAX_A                   5.0f                      /* amplifier swing limit */
-#define I_TRIP_A                  5.5f                      /* software trip */
-#define I_CONT_A_RMS              3.5f                      /* sense-range / connector limit */
-#define CURRENT_SENSE_PHASES      2                         /* Ic = -(Ia+Ib); no 3rd INA240 */
+#ifndef BRIDGE_DISCRETE
+#define SHUNT_OHM                 0.030f      /* one 30 mOhm per phase */
+#define I_MAX_A                   2.5f        /* = INA240 swing = DRV8313 peak */
+#define I_TRIP_A                  2.8f
+#define I_CONT_A_RMS              1.5f        /* DRV8313 thermal on the Mini */
+#else
+#define SHUNT_OHM                 0.015f      /* 2 x 30 mOhm in parallel */
+#define I_MAX_A                   5.0f
+#define I_TRIP_A                  5.5f
+#define I_CONT_A_RMS              3.5f
+#endif
+#define ISENSE_V_PER_A            (SHUNT_OHM * CSA_GAIN)
+#define ISENSE_OFFSET_V_NOMINAL   1.65f       /* REF = VS/2, auto-cal at boot */
+#define CURRENT_SENSE_PHASES      2           /* Ic = -(Ia+Ib) */
 
 /* ---- ADC --------------------------------------------------------------- */
 #define ADC_VREF_V                3.3f
 #define ADC_BITS                  12U
 #define ADC_V_PER_LSB             (ADC_VREF_V / (float)(1U << ADC_BITS))
-#define VBUS_DIV_TOP_OHM          20000.0f   /* 2 x 10k series */
+#define VBUS_DIV_TOP_OHM          20000.0f    /* 2 x 10k series */
 #define VBUS_DIV_BOT_OHM          2200.0f
 #define VBUS_V_PER_LSB            (ADC_V_PER_LSB * (VBUS_DIV_TOP_OHM + VBUS_DIV_BOT_OHM) / VBUS_DIV_BOT_OHM)
 #define NTC_R25_OHM               10000.0f
 #define NTC_BETA                  3950.0f
 #define NTC_PULLUP_OHM            10000.0f
 
-/* ---- Bus limits — depend on the bridge FET population ------------------ */
-#ifdef BRIDGE_FET_AOD4184                    /* optional 24 V build: AOD4184, 40 V, TO-252 */
+/* ---- Bus limits -------------------------------------------------------- */
+#ifndef BRIDGE_DISCRETE
+#define VBUS_MIN_V                8.0f        /* DRV8313 UVLO */
+#define VBUS_MAX_V                26.0f       /* Mini: 24 V nominal, 35 V cap */
+#define VBUS_NOMINAL_V            24.0f
+#elif defined(BRIDGE_FET_AOD4184)
 #define VBUS_MIN_V                10.0f
 #define VBUS_MAX_V                28.0f
 #define VBUS_NOMINAL_V            24.0f
-#else                                        /* default: AO3400A, 30 V, SOT-23 (parts on hand) */
+#else                                         /* AO3400A, 30 V */
 #define VBUS_MIN_V                10.0f
 #define VBUS_MAX_V                20.0f
 #define VBUS_NOMINAL_V            16.0f
@@ -63,29 +84,34 @@
 #define ENC_M_CPR                 (1U << ENC_M_BITS)
 #define ENC_M_I2C_ADDR            0x36U
 #define ENC_M_I2C_HZ              400000UL
-#define ENC_M_READ_HZ             1000U      /* I2C read rate; angle extrapolated at PWM rate */
-#define AS5600_CONF_SF            3U         /* slow filter 2x -> 0.29 ms latency (default 16x = 2.2 ms) */
-#define AS5600_CONF_FTH           6U         /* fast-filter threshold 10 LSB */
+#define ENC_M_READ_HZ             1000U       /* angle extrapolated with omega at PWM rate */
+#define AS5600_CONF_SF            3U          /* slow filter 2x -> 0.29 ms (default 16x = 2.2 ms) */
+#define AS5600_CONF_FTH           6U          /* fast-filter threshold 10 LSB */
 /* Output side (joint position, absolute through the cycloidal): SPI on J5. */
-#define ENC_J_BITS                14U        /* MT6701 / AS5047P */
+#define ENC_J_BITS                14U         /* MT6701 / AS5047P */
 #define ENC_J_SPI_HZ              1000000UL
-#define GEAR_RATIO                15.0f      /* cycloidal — set to the real ratio */
+#define GEAR_RATIO                15.0f       /* cycloidal — set to the real ratio */
 
 /* ---- CAN --------------------------------------------------------------- */
-#define CAN_BITRATE               1000000UL  /* SN65HVD230 limit */
+#define CAN_BITRATE               1000000UL   /* SN65HVD230 limit */
 #define CAN_HEARTBEAT_TIMEOUT_MS  100U
 #define CAN_FEEDBACK_HZ           1000U
 #define CAN_STATUS_HZ             10U
 
-/* ---- Pins (documented in docs/03-pin-assignment.md) -------------------- */
-#define PIN_PWM_AH   GPIOA, 8    /* TIM1_CH1  AF6 */
-#define PIN_PWM_BH   GPIOA, 9    /* TIM1_CH2  AF6 */
-#define PIN_PWM_CH   GPIOA, 10   /* TIM1_CH3  AF6 */
+/* ---- Pins (docs/03-pin-assignment.md) ---------------------------------- */
+#define PIN_PWM_A    GPIOA, 8    /* TIM1_CH1 AF6 -> Mini H1.3 IN1 */
+#define PIN_PWM_B    GPIOA, 9    /* TIM1_CH2 AF6 -> Mini H1.5 IN2 */
+#define PIN_PWM_C    GPIOA, 10   /* TIM1_CH3 AF6 -> Mini H1.7 IN3 */
+#ifdef BRIDGE_DISCRETE
 #define PIN_PWM_AL   GPIOB, 13   /* TIM1_CH1N AF6 */
 #define PIN_PWM_BL   GPIOB, 14   /* TIM1_CH2N AF6 */
 #define PIN_PWM_CL   GPIOB, 15   /* TIM1_CH3N AF4 (!) */
-#define PIN_DRV_FLT  GPIOB, 12   /* TIM1_BKIN AF6, active low */
-#define PIN_DRV_EN   GPIOB, 2
+#else
+#define PIN_DRV_NSLP GPIOB, 14   /* -> Mini H1.8 nSLEEP */
+#define PIN_DRV_NRST GPIOB, 15   /* -> Mini H1.6 nRESET */
+#endif
+#define PIN_DRV_FLT  GPIOB, 12   /* TIM1_BKIN AF6 <- Mini H1.10 nFAULT (active low) */
+#define PIN_DRV_EN   GPIOB, 2    /* -> Mini H1.9 EN */
 #define PIN_ISENSE_A GPIOA, 0    /* ADC1_IN1 */
 #define PIN_ISENSE_B GPIOA, 1    /* ADC2_IN2 */
 #define PIN_VBUS     GPIOA, 2    /* ADC1_IN3 */

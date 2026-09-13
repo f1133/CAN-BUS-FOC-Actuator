@@ -32,6 +32,9 @@ JST-XH-5P-HSG,5-pin JST-XH housing,—,5,order sheet line 14,
 JST-XH-5P-CABLE,5-pin JST-XH double-ended 30 cm,—,1,order sheet line 9,
 NTC-MF52E103,10 kΩ NTC 1 % B≈3950,radial 1 mm,5,order sheet line 6,motor winding temperature
 CU-CLAD-1S-76x100,Single-sided FR4 copper clad 7.6x10 cm,—,4,order sheet line 10,NOT usable for this board (2-layer from Lion Circuits instead)
-AO3400A,N-ch MOSFET 30 V 5.8 A 28 mΩ@10 V,SOT-23,0,BOUGHT (count not confirmed),Spin-1 bridge FET (16 V bus). Need 18 (6 per board); confirm ≥ 18
-ERJ8CWFR030V,30 mΩ 1 W 1 % current-sense,1206,0,BOUGHT (count not confirmed),Need 12 (2 parallel x 2 phases x 3); confirm ≥ 12
-AOD4184,N-ch MOSFET 40 V 50 A 8 mΩ@10 V,TO-252,0,OPTIONAL — not bought,24 V upgrade instead of AO3400; different footprint so decide before layout
+AO3400A,N-ch MOSFET 30 V 5.8 A 28 mΩ@10 V,SOT-23,0,BOUGHT (count not confirmed),NOT USED in spin 1 (SimpleFOC Mini is the power stage). Spin-2 discrete bridge: 6 per board
+ERJ8CWFR030V,30 mΩ 1 W 1 % current-sense,1206,0,BOUGHT (count not confirmed),1 per phase x 2 phases x 3 = 6 (±2.5 A matches the DRV8313 peak); confirm ≥ 6
+AOD4184,N-ch MOSFET 40 V 50 A 8 mΩ@10 V,TO-252,0,not bought,Spin-2 discrete bridge option only
+SIMPLEFOCMINI,SimpleFOC Mini v1.0 — DRV8313 3-phase driver module 8-24 V 2.5 A pk with 3.3 V LDO; 2x5 + 1x3 female headers + screw terminal,26x20 mm module,0,BOUGHT (count not confirmed),Spin-1 power stage. Need 3 (1 per board); confirm ≥ 3
+SS14,Schottky 40 V 1 A (SLKOR),SMA/DO-214AC,0,HAVE (robu.in SS14 — count not confirmed),MP1584 catch diode; 1 per board
+R-100k-THT,100 kΩ 1/4 W from the through-hole resistor kit,axial,0,HAVE (THT kit),MP1584 fsw set; the kit also covers any value not in the 1206 stock

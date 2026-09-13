@@ -1,15 +1,15 @@
 pin,signal,mode,peripheral,af,direction,notes
-PA0,ISENSE_A,analog,ADC1_IN1,,in,INA240 #1 output (phase A inline shunt). Injected group rank 1 on ADC1.
-PA1,ISENSE_B,analog,ADC2_IN2,,in,INA240 #2 output (phase B inline shunt). Injected group rank 1 on ADC2 (dual-simultaneous with PA0).
+PA0,ISENSE_A,analog,ADC1_IN1,,in,"INA240 #1 output: single 30 mOhm inline shunt on Mini OUT1 -> J2 phase A (0.6 V/A, ±2.5 A). Injected rank 1 on ADC1."
+PA1,ISENSE_B,analog,ADC2_IN2,,in,INA240 #2 output: single 30 mOhm inline shunt on Mini OUT2 -> J2 phase B. Injected rank 1 on ADC2 (dual-simultaneous with PA0).
 PA2,VBUS_SENSE,analog,ADC1_IN3,,in,Bus voltage divider: 20k top (2x10k series) / 2.2k bottom -> 24 V reads 2.38 V; full-scale 33.3 V. Regular group + DMA.
 PA3,TEMP_NTC,analog,ADC1_IN4,,in,"MF52E103 10k NTC (in the motor winding) with 10k pull-up to 3V3, brought in on J3 pin 5. Regular group + DMA."
 PA4,ENC_A_CS,gpio_out,,,out,"J4 SPI_A chip-select: future motor-side SPI encoder (MT6701 SSI / AS5047P). Idle high, 10k pull-up."
 PA5,ENC_SCK,af,SPI1_SCK,5,out,"SPI1 clock, shared by J4 and J5."
 PA6,ENC_MISO,af,SPI1_MISO,5,in,"SPI1 MISO (SSI DO), shared by J4 and J5."
 PA7,ENC_MOSI,af,SPI1_MOSI,5,out,SPI1 MOSI for 4-wire encoders (AS5047P command word). The 3rd inline shunt option was dropped: 8 INA240 cannot give 3 per board.
-PA8,PWM_AH,af,TIM1_CH1,6,out,High-side gate A.
-PA9,PWM_BH,af,TIM1_CH2,6,out,High-side gate B.
-PA10,PWM_CH,af,TIM1_CH3,6,out,High-side gate C.
+PA8,PWM_A,af,TIM1_CH1,6,out,Mini H1 pin 3 (DRV8313 IN1). 3-PWM: DRV8313 makes the complementary edge and dead time internally.
+PA9,PWM_B,af,TIM1_CH2,6,out,Mini H1 pin 5 (DRV8313 IN2).
+PA10,PWM_C,af,TIM1_CH3,6,out,Mini H1 pin 7 (DRV8313 IN3).
 PA11,CAN_RX,af,FDCAN1_RX,9,in,SN65HVD230 R pin.
 PA12,CAN_TX,af,FDCAN1_TX,9,out,SN65HVD230 D pin.
 PA13,SWDIO,af,SYS_SWDIO,0,bidir,Debug. Never repurpose.
@@ -17,7 +17,7 @@ PA14,SWCLK,af,SYS_SWCLK,0,in,Debug. Never repurpose.
 PA15,ENC_B_CS,gpio_out,,,out,"J5 SPI_B chip-select: output-side absolute encoder through the cycloidal reducer. Idle high, 10k pull-up (JTDI at reset)."
 PB0,SPARE_ADC_1,analog,ADC1_IN15,,in,Spare analog. Candidate: 2nd NTC (FET/board temperature).
 PB1,SPARE_ADC_2,analog,ADC1_IN12,,in,Spare analog.
-PB2,DRV_EN,gpio_out,,,out,Gate-driver ENABLE / nSLEEP. Default low at reset (FETs off) — external 10k pull-down mandatory.
+PB2,DRV_EN,gpio_out,,,out,Mini H1 pin 9 (EN1/2/3 via 10k). 10k pull-down on the carrier keeps the bridge off through reset.
 PB3,UART_TX,af,USART2_TX,7,out,Debug console / SimpleFOC commander. (Sacrifices SWO — SWD 2-wire still works.)
 PB4,UART_RX,af,USART2_RX,7,in,Debug console.
 PB5,SPARE_1,gpio_in,,,in,Spare. Candidate: encoder INDEX/Z or hall U.
@@ -27,10 +27,10 @@ PB8,BOOT0,boot,BOOT0,,in,Shared with BOOT0 on LQFP48. 10k pull-down + test point
 PB9,STATUS_LED,gpio_out,,,out,Red 1206 LED via 2.2k.
 PB10,SPARE_2,gpio_in,,,in,Spare. Candidate hall V.
 PB11,SPARE_3,gpio_in,,,in,Spare. Candidate hall W.
-PB12,DRV_nFAULT,af,TIM1_BKIN,6,in,Gate-driver nFAULT -> hardware break: TIM1 outputs forced to idle in < 1 cycle with no CPU involvement. Active-low with 10k pull-up.
-PB13,PWM_AL,af,TIM1_CH1N,6,out,Low-side gate A (complementary with dead-time).
-PB14,PWM_BL,af,TIM1_CH2N,6,out,Low-side gate B.
-PB15,PWM_CL,af,TIM1_CH3N,4,out,Low-side gate C. NOTE AF4 not AF6 on this pin.
+PB12,DRV_nFAULT,af,TIM1_BKIN,6,in,"Mini H1 pin 10 (nFAULT, open-drain, 10k pull-up on the Mini) -> hardware break: TIM1 outputs forced idle with no CPU involvement."
+PB13,SPARE_4,gpio_in,,,in,"Spare (was TIM1_CH1N AF6 — only needed for a discrete 6-PWM bridge, spin 2)."
+PB14,DRV_nSLEEP,gpio_out,,,out,"Mini H1 pin 8 (nSLEEP, 10k pull-up on the Mini). Drive high to run, low to sleep. (TIM1_CH2N AF6 available here for spin 2.)"
+PB15,DRV_nRESET,gpio_out,,,out,"Mini H1 pin 6 (nRESET, 10k pull-up on the Mini). Pulse low to clear a latched fault. (TIM1_CH3N AF4 available here for spin 2.)"
 PC13,NODE_ID0,gpio_in,,,in,CAN node-ID bit 0. 10k pull-down; 0R jumper to 3V3 sets bit.
 PC14,NODE_ID1,gpio_in,,,in,CAN node-ID bit 1 (OSC32_IN unused — no LSE).
 PC15,NODE_ID2,gpio_in,,,in,CAN node-ID bit 2 (OSC32_OUT unused).

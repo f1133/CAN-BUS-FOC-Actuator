@@ -6,31 +6,28 @@ Decisions taken for the first PCB order, and what each one changed.
 
 | Decision | Consequence in the design |
 |---|---|
-| **No 5 V rail.** Nothing needs it (STM32, SN65HVD230, INA240, AS5600 all 3.3 V). | MP1584EN runs straight to 3.3 V (t_on 137 ns at 24 V, ripple 0.86 A, DCM). AMS1117 unused. Frees 2 × 1 µF + 2 × 10 µF per board. |
-| **AS5600 motors** (as shipped). | I2C1 PB6/PB7 is the default encoder; J3 = 3V3, GND, SCL, SDA, NTC — one cable to the motor. The SPI-mode 0 Ω jumpers and MT6701 purchase are gone. |
-| **2-layer PCB from Lion Circuits.** | OK at 3.5 A rms / 24 V with a bottom-layer ground pour and 2 oz copper. ~60 × 60 mm. The single-sided copper clad stays unused. |
-| **Cycloidal actuator.** | Motor-side encoder cannot give joint-absolute position → dual encoder: AS5600 for commutation, **SPI encoder on the output shaft (J5)** for joint position. Fixed AS5600 address rules out a second I2C device, so the second port is SPI. |
-| **SPI for future encoder upgrade.** | Two 1×6 SPI headers cut from the female strip, shared SCK/MISO/MOSI, separate CS: J4 (PA4, motor side) and J5 (PA15, output side). PA7 became SPI1_MOSI; the 3rd-shunt option was dropped (8 INA240 ÷ 3 boards anyway). |
-| **Max spec from the parts.** | 2 × 30 mΩ in parallel per phase → ±5 A pk / 3.5 A rms, 12 of the bought shunts. One board drives one motor. |
-| **Bridge FET: the bought AO3400s.** | Spin 1 runs at **16 V** on the AO3400 (30 V Vds, ~5 A rms thermal on 2 oz). The one bottleneck upgrade worth its money is **AOD4184** (TO-252, 40 V, 8 mΩ) → 24 V bus and the FET out of the thermal budget — but it is a different footprint, so decide before layout. Firmware: `-DBRIDGE_FET_AOD4184`. |
-| Reverse-polarity FET dropped. | JST-VH is keyed; the 3rd AO3481 no longer needs buying. |
-| 25 V 10 µF ceramics moved off VBUS. | 67 % of rating at 16.8 V, 101 % at 25.2 V. 100 nF 250 V and 1 µF 50 V take their place on the bus, which keeps the 24 V option open. |
+| **The SimpleFOC Mini is the power stage**, plugged into the board. | The board is a carrier: STM32G431, CAN, 2 × INA240 inline sense, buck, encoder ports, Mini socket. No gate driver, gate rail, gate resistors or discrete FETs. 3-PWM control (IN1-3 + EN), nSLEEP/nRESET on GPIOs, nFAULT to the TIM1 break input. The Mini's 3.3 V pin stays unconnected (30 mA LDO; must not be paralleled with the carrier rail). |
+| **One board drives one motor.** | Three carriers, three Minis, three motors. |
+| **Max spec from the parts.** | The DRV8313's 2.5 A peak is matched exactly by one 30 mΩ + INA240A1 (±2.5 A, 1.3 mA/LSB): 6 shunts total. ~1.5 A rms continuous from the Mini's thermal budget. 24 V bus. |
+| **No 5 V rail.** | MP1584EN straight to 3.3 V with the CD43 3.3 µH and the **SS14** on hand (40 V, 1 A: 0.53 A peak at 24 V). 100 k from the **THT kit**. AMS1117 unused. |
+| **AS5600 motors** (as shipped). | I2C1 on J3 = 3V3, GND, SCL, SDA, NTC — one cable to the motor. |
+| **Cycloidal actuator.** | Motor-side encoder cannot give joint-absolute position → **SPI encoder on the output shaft (J5)**. Second AS5600 impossible (fixed address), hence SPI. |
+| **SPI for future encoder upgrade.** | J4 (PA4 CS, motor side) and J5 (PA15 CS, output side) on SPI1; PA7 = MOSI. |
+| **2-layer PCB from Lion Circuits.** | ~60 × 60 mm; the carrier dissipates ~0.5 W, 1 oz is fine. |
+| 25 V 10 µF ceramics kept off VBUS. | 101 % of rating at 25.2 V. 100 nF 250 V / 1 µF 50 V on the bus. |
+| Reverse-polarity FET dropped. | JST-VH is keyed. |
+| **Bought parts kept for spin 2.** | AO3400 ×(≥18), FD6288T-style discrete bridge → ±5 A with the parallel shunts and PB13/14/15 as CH1N-3N. Firmware `-DBRIDGE_DISCRETE`. Documented, not built. |
 
 ## Bottleneck upgrades, ranked
 
-Things that limit the board at the spin-1 design point, cheapest first. None
-require a PCB change except where noted.
-
 | # | Bottleneck | Limit today | Upgrade | Cost |
 |---|---|---|---|---|
-| 1 | Bridge FET voltage/thermal | AO3400: 16 V, ~5 A rms | **AOD4184** → 24 V, ~15 A rms. Footprint decision before layout | ~₹10/pc × 24 |
-| 2 | Phase connector | JST-XH 3-pin, ~3 A/pin | JST-VH 3-pin or 5.08 mm screw terminal (footprint decision at layout) | ~₹5 |
-| 3 | Copper | 1 oz at 3.5 A rms is warm | order 2 oz | fab option |
-| 4 | Motor-side encoder rate/latency | AS5600 I2C, 1 kHz reads, 12-bit, 0.29 ms filter | MT6701 (SSI, 14-bit) or AS5047P on **J4** — no PCB change | ~₹150 |
-| 5 | Joint-absolute position | none without J5 (homing at boot) | MT6701 / AS5047P + 6 mm diametric magnet on the output shaft, **J5** — no PCB change | ~₹150 + magnet |
-| 6 | CAN bandwidth | 1 Mbps classic, 68 % load with 3 joints at 1 kHz | TCAN332 (3.3 V, 5 Mbps FD) in the same footprint — no PCB change | ~₹80 |
-| 7 | Current-sense range | ±5 A (sense-limited, FETs have 3× margin) | 3 × 30 mΩ ‖ (10 mΩ) → ±7.5 A; needs the VH phase connector and 2 oz first | 6 more shunts/board |
-| 8 | Gate resistors | 22 Ω → 0.4 W switching loss at 3.5 A/20 kHz on AO3400 (1.3 W on AOD4184) | 10 Ω if EMI/ringing allows | ₹1 |
+| 1 | Phase current | DRV8313 2.5 A pk / ~1.5 A rms | **Spin 2 discrete bridge** with the AO3400s on hand + FD6288T + 10 V rail + 22 Ω → ±5 A. New PCB. | ~₹300 + PCB |
+| 2 | Mini thermal | ~1.35 W on 26 × 20 mm | screw the Mini to the carrier's pour with a thermal pad; airflow | ₹0 |
+| 3 | Motor-side encoder | AS5600 I2C, 1 kHz, 12-bit | MT6701 / AS5047P on **J4** — no PCB change | ~₹150 |
+| 4 | Joint-absolute position | none without J5 (homing at boot) | MT6701 / AS5047P + 6 mm diametric magnet on the output shaft, **J5** — no PCB change | ~₹150 + magnet |
+| 5 | CAN bandwidth | 1 Mbps classic, 68 % at 1 kHz × 3 joints | TCAN332 in the same footprint — no PCB change | ~₹80 |
+| 6 | Phase connector | JST-XH 3-pin ~3 A/pin | only matters for spin 2 | — |
 
 ## Encoder mounting (3D-printed)
 
@@ -40,40 +37,37 @@ rotation axis of the cycloidal output — so plan the parts around that:
 * **Magnet on the axis.** 6 × 2.5 mm diametrically magnetised disc pressed
   into a printed cup on the output shaft centre (or the cycloidal's output
   disc). Runout ≤ 0.2 mm, air gap 0.5–2 mm to the sensor face. No screw heads
-  or steel within ~5 mm of the magnet; use a nylon/brass screw or a press fit
-  for the cup.
+  or steel within ~5 mm of the magnet; nylon/brass screw or press fit.
 * **Sensor on a printed bracket** bolted to the fixed housing, with two
-  adjustment slots so the magnet-to-chip centring can be dialled in (an
-  off-centre magnet shows up as a once-per-turn angle error). The common
-  MT6701 / AS5047P breakout boards are ~15 × 15 mm with 2 mounting holes.
-* **Hollow output?** If the output shaft is bored through (cables to the
-  next joint), put the magnet on a printed spoke across the bore end, or use
-  an off-axis magnetic ring (MT6835 / AS5x47 in ring mode) — same SPI port.
-* **Motor side** stays as shipped (AS5600 on the motor's back). If it is later
-  upgraded to SPI on J4, the same printed-cup approach applies to the motor
-  shaft end.
-* **Driver board**: printed spacer/adapter on the motor back plate using the
-  40 mm hole square; keep-out over the motor's AS5600 board; J5 cable to the
-  output encoder is short and stays inside the actuator housing.
+  adjustment slots so the magnet-to-chip centring can be dialled in. The
+  common MT6701 / AS5047P breakouts are ~15 × 15 mm with 2 holes.
+* **Hollow output?** Magnet on a printed spoke across the bore end, or an
+  off-axis magnetic ring (MT6835 / AS5x47 ring mode) — same SPI port.
+* **Motor side** stays as shipped (AS5600 on the motor's back).
+* **Carrier + Mini**: printed spacer on the motor back plate using the 40 mm
+  hole square; the Mini sits on the carrier's pour with a thermal pad; keep-out
+  over the motor's AS5600 board; J5 cable stays inside the housing.
 
 ## First-PCB checklist (things that save a respin)
 
-* **Every IC gets a 100 nF within 2 mm.** INA240 VS, FD6288T VCC, SN65HVD230, MCU ×3 + VDDA.
-* **DRV_EN pull-down, nFAULT pull-up, BOOT0 pull-down** — the three resistors that decide whether the board is safe at power-on.
-* **Bridge-disable jumper**: a 0 Ω site in series with DRV_EN so the logic can be brought up with the bridge physically unable to switch.
-* **Test points**: 3V3, 10 V, VBUS/10, ISENSE_A/B (expect 1.65 V idle), nFAULT, each phase.
-* **Kelvin the shunts**: INA240 IN+/IN− traces leave from the inner edge of the shunt pads, not from the current path.
+* **Every IC gets a 100 nF within 2 mm.** INA240 VS ×2, SN65HVD230, MCU ×3 + VDDA.
+* **DRV_EN pull-down and BOOT0 pull-down** on the carrier (nFAULT/nSLEEP/nRESET pull-ups are on the Mini).
+* **Mini 3.3V pin (H1.2): no copper.** Label it NC on the silkscreen.
+* **Bridge-disable jumper**: 0 Ω site in series with DRV_EN so the logic can be brought up with the Mini unable to switch.
+* **Test points**: 3V3, VBUS/10, ISENSE_A/B (expect 1.65 V idle), nFAULT, each phase.
+* **Kelvin the shunts**: INA240 IN+/IN− traces from the inner edge of the shunt pads.
 * **ADC input RC (10 Ω + 1 nF) sites** on ISENSE_A/B even if populated with 0 Ω.
+* **Mini socket orientation**: silkscreen the H1 pin-1 corner and the P1 OUT3/OUT2/OUT1 order; a reversed Mini puts 24 V onto logic pins.
 * **SWD header** (3V3, SWDIO, SWCLK, GND) and **UART header** (TX, RX, GND) from the strip; label them.
-* **Silkscreen the node-ID straps and CAN-termination jumper** so three boards can be set without the schematic.
-* **Mounting holes on a 40 mm square**, keep-out under the motor's AS5600 board.
-* **First power-up**: bench supply current-limited to 200 mA, bridge-disable jumper open, check 3V3 and 10 V before anything else.
+* **Silkscreen the node-ID straps and CAN-termination jumper.**
+* **Mounting holes on a 40 mm square**, plus one under the Mini's hole; keep-out under the motor's AS5600 board.
+* **First power-up**: bench supply current-limited to 200 mA, bridge-disable jumper open, Mini unplugged; check 3V3, then plug the Mini in.
 
 ## Firmware build flags
 
 | Flag | Effect |
 |---|---|
-| (default) | AO3400A, VBUS 10–20 V nominal 16 V |
-| `-DBRIDGE_FET_AOD4184` | VBUS 10–28 V nominal 24 V |
+| (default) | SimpleFOC Mini: 3-PWM, 30 mΩ, ±2.5 A, VBUS 8–26 V |
+| `-DBRIDGE_DISCRETE` | spin-2 6-PWM bridge: 15 mΩ, ±5 A, dead time 400 ns, AO3400 limits (16 V) |
+| `-DBRIDGE_DISCRETE -DBRIDGE_FET_AOD4184` | spin-2 with AOD4184: 24 V |
 | `GEAR_RATIO` | set to the real cycloidal ratio in `foc_config.h` |
-| `ENC_M_TYPE_AS5600` | motor-side encoder type; SPI types added when J4 is populated |

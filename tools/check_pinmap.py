@@ -75,7 +75,9 @@ ADC_TABLE = {
 # Signals that the design *requires*, with the number of pins each occupies.
 REQUIRED_COUNT = {"HSE": 2}   # OSC_IN + OSC_OUT
 REQUIRED = [
-    "TIM1_CH1", "TIM1_CH2", "TIM1_CH3", "TIM1_CH1N", "TIM1_CH2N", "TIM1_CH3N", "TIM1_BKIN",
+    # 3-PWM into the SimpleFOC Mini (DRV8313).  A discrete 6-PWM bridge (spin 2)
+    # would add TIM1_CH1N/CH2N/CH3N on PB13/PB14/PB15 (AF6/AF6/AF4).
+    "TIM1_CH1", "TIM1_CH2", "TIM1_CH3", "TIM1_BKIN",
     "FDCAN1_RX", "FDCAN1_TX",
     "SPI1_SCK", "SPI1_MISO", "SPI1_MOSI",
     "USART2_TX", "USART2_RX",

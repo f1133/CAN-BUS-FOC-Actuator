@@ -35,8 +35,8 @@ def main() -> int:
         if part not in inv:
             status = "MISSING"
             blockers.append(part)
-        elif have == 0 and "bought" in inv[part]["source"].lower():
-            status = f"BOUGHT — confirm you have ≥ {total}"
+        elif have == 0 and any(k in inv[part]["source"].lower() for k in ("bought", "have")):
+            status = f"ON HAND — confirm you have ≥ {total}"
             bought.append(part)
         elif have == 0:
             status = "QTY UNKNOWN (user-supplied)"
@@ -56,7 +56,7 @@ def main() -> int:
 
     print()
     print(f"MISSING entirely ({len(blockers)}): " + ", ".join(blockers))
-    print(f"Bought, count to confirm ({len(bought)}): " + ", ".join(bought))
+    print(f"On hand, count to confirm ({len(bought)}): " + ", ".join(bought))
     print(f"SHORT / qty unknown ({len(short)}): " + ", ".join(short))
     print(f"Tight ({len(tight)}): " + ", ".join(tight))
     return 0
