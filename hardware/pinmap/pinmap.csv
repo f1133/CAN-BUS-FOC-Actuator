@@ -1,0 +1,39 @@
+pin,signal,mode,peripheral,af,direction,notes
+PA0,ISENSE_A,analog,ADC1_IN1,,in,INA240 #1 output (phase A inline shunt). Injected group rank 1 on ADC1.
+PA1,ISENSE_B,analog,ADC2_IN2,,in,INA240 #2 output (phase B inline shunt). Injected group rank 1 on ADC2 (dual-simultaneous with PA0).
+PA2,VBUS_SENSE,analog,ADC1_IN3,,in,Bus voltage divider: 20k top (2x10k series) / 2.2k bottom -> 24 V reads 2.38 V; full-scale 33.3 V. Regular group + DMA.
+PA3,TEMP_NTC,analog,ADC1_IN4,,in,MF52E103 10k NTC with 10k pull-up to 3V3. Regular group + DMA.
+PA4,ENC_CS,gpio_out,,,out,Encoder chip-select (MT6701 CSN / AS5047P CSn). Idle high.
+PA5,ENC_SCK,af,SPI1_SCK,5,out,Encoder clock.
+PA6,ENC_MISO,af,SPI1_MISO,5,in,Encoder data out (SSI DO / SPI MISO).
+PA7,ISENSE_C_OPT,analog,ADC2_IN4,,in,RESERVED: optional 3rd INA240 for 3-shunt sensing. If a full 4-wire SPI encoder is needed instead this becomes SPI1_MOSI (AF5) and 3-shunt is lost.
+PA8,PWM_AH,af,TIM1_CH1,6,out,High-side gate A.
+PA9,PWM_BH,af,TIM1_CH2,6,out,High-side gate B.
+PA10,PWM_CH,af,TIM1_CH3,6,out,High-side gate C.
+PA11,CAN_RX,af,FDCAN1_RX,9,in,SN65HVD230 R pin.
+PA12,CAN_TX,af,FDCAN1_TX,9,out,SN65HVD230 D pin.
+PA13,SWDIO,af,SYS_SWDIO,0,bidir,Debug. Never repurpose.
+PA14,SWCLK,af,SYS_SWCLK,0,in,Debug. Never repurpose.
+PA15,SPARE_0,gpio_in,,,in,Spare (JTDI at reset). Pull-down. Candidate: brake resistor / aux output.
+PB0,SPARE_ADC_1,analog,ADC1_IN15,,in,Spare analog. Candidate: 2nd NTC (board temp) or 3rd shunt on ADC1 for true 3-shunt dual sampling.
+PB1,SPARE_ADC_2,analog,ADC1_IN12,,in,Spare analog.
+PB2,DRV_EN,gpio_out,,,out,Gate-driver ENABLE / nSLEEP. Default low at reset (FETs off) — external 10k pull-down mandatory.
+PB3,UART_TX,af,USART2_TX,7,out,Debug console / SimpleFOC commander. (Sacrifices SWO — SWD 2-wire still works.)
+PB4,UART_RX,af,USART2_RX,7,in,Debug console.
+PB5,SPARE_1,gpio_in,,,in,Spare. Candidate: encoder INDEX / Z or hall U.
+PB6,I2C_SCL,af,I2C1_SCL,4,bidir,Optional I2C encoder (AS5600) or external sensor. 4.7k pull-up.
+PB7,I2C_SDA,af,I2C1_SDA,4,bidir,Optional I2C encoder. 4.7k pull-up.
+PB8,BOOT0,boot,BOOT0,,in,Shared with BOOT0 on LQFP48. 10k pull-down + test point only. DO NOT route CAN_RX or I2C here (idles high -> enters bootloader).
+PB9,STATUS_LED,gpio_out,,,out,Red 1206 LED via 2.2k.
+PB10,SPARE_2,gpio_in,,,in,Spare. Candidate hall V.
+PB11,SPARE_3,gpio_in,,,in,Spare. Candidate hall W.
+PB12,DRV_nFAULT,af,TIM1_BKIN,6,in,Gate-driver nFAULT -> hardware break: TIM1 outputs forced to idle in < 1 cycle with no CPU involvement. Active-low with 10k pull-up.
+PB13,PWM_AL,af,TIM1_CH1N,6,out,Low-side gate A (complementary with dead-time).
+PB14,PWM_BL,af,TIM1_CH2N,6,out,Low-side gate B.
+PB15,PWM_CL,af,TIM1_CH3N,4,out,Low-side gate C. NOTE AF4 not AF6 on this pin.
+PC13,NODE_ID0,gpio_in,,,in,CAN node-ID bit 0. 10k pull-down; 0R jumper to 3V3 sets bit.
+PC14,NODE_ID1,gpio_in,,,in,CAN node-ID bit 1 (OSC32_IN unused — no LSE).
+PC15,NODE_ID2,gpio_in,,,in,CAN node-ID bit 2 (OSC32_OUT unused).
+PF0,OSC_IN,osc,HSE,,in,8 MHz crystal X49SM8MSD2SC + 30 pF. HSE required for CAN bit-timing accuracy (HSI16 is only ±1 %).
+PF1,OSC_OUT,osc,HSE,,out,8 MHz crystal.
+PG10,NRST,reset,NRST,,in,100 nF to GND + SWD connector.
