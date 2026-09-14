@@ -12,10 +12,12 @@ encoders; replace with the datasheet numbers for the actual motor.
 """
 import math
 
+import cycloidal_calcs as cyc
+
 VBUS = 12.0          # V, single shared PSU
 PSU_A = 5.0          # A, PSU rating for the whole arm
 I_DRV_PK = 2.5       # A, DRV8313 / INA240 range
-RATIO = 15           # cycloidal — placeholder until measured
+RATIO = cyc.RATIO    # cycloidal, = ring pins - 1; see hardware/calc/cycloidal_calcs.py
 ETA = 0.85           # cycloidal efficiency
 POLE_PAIRS = 7
 AS5600_HZ = 1000

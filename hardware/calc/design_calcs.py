@@ -5,6 +5,12 @@ carrier).  Every number quoted in docs/ is derived here.
 Run:  python3 hardware/calc/design_calcs.py
 """
 import math
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import arm_model as am
+import cycloidal_calcs as cyc
 
 VDD = 3.3
 
@@ -33,7 +39,7 @@ FCLK, PWM_F = 170e6, 20e3
 CAN_BITRATE, N_JOINTS, CTRL_HZ = 1e6, 3, 1000
 
 # Actuator
-CYCLOIDAL_RATIO, POLE_PAIRS, AS5600_READ_HZ = 15, 7, 1000
+CYCLOIDAL_RATIO, POLE_PAIRS, AS5600_READ_HZ = cyc.RATIO, 7, 1000
 
 # Spin-2 discrete bridge (parts in the drawer), kept for reference
 FETS = {
@@ -127,8 +133,6 @@ print(f"The LDO is now the hottest thing on the carrier at {p_ldo:.2f} W - give 
 print("it away from the shunts and the INA240s.")
 
 hr("9. Arm capability at 12 V — per joint, then the shared 5 A PSU")
-import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
-import arm_model as am
 print(f"Vbus {am.VBUS:.0f} V, driver {am.I_DRV_PK} A pk, cycloidal x{am.RATIO} at {am.ETA:.0%}, reach {am.REACH_M} m for the payload column")
 print(f"{'motor (typical values)':38s} {'Kv':>4} {'R':>5}  {'Iq stall':>9} {'limit':>14} {'T motor':>8} {'T joint':>8} {'joint °/s':>9} {'bus A@stall':>11} {'AS5600 rd/cyc':>13} {'payload@0.3m':>12}")
 tot = 0
@@ -141,7 +145,10 @@ print("At 24 V the same high-R gimbal motors reach 2x the stall current -> 2x jo
       + ", ".join(f"{name.split(' ')[0]} {j24['t_j']:.2f} N·m" for (name, j24) in am.table(vbus=24.0)))
 print("Motor speed >~1000 rpm (low-R rows) drops below ~4 AS5600 reads per electrical cycle -> that motor wants the J4 SPI encoder.")
 
-hr("10. Spin 2 reference — discrete 6-PWM bridge with the AO3400s in the drawer")
+hr("10. Cycloidal reducer geometry (hardware/calc/cycloidal_calcs.py)")
+cyc.report()
+
+hr("11. Spin 2 reference — discrete 6-PWM bridge with the AO3400s in the drawer")
 for name, f in FETS.items():
     p_allow = (125 - 40) / f["theta_ja"]; t_sw = 3 * 22 * f["ciss"]; p_sw = 0.5 * f["vbus_full"] * 3.5 * 2 * t_sw * PWM_F
     i_rms = math.sqrt(max(p_allow - p_sw, 0) * 2 / (f["rds_10v"] * 1.5))

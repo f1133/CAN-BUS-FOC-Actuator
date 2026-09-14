@@ -48,6 +48,7 @@ the netlist and compares it pin-for-pin against that design.
 python3 tools/check_pinmap.py          # 0 conflicts on hardware/pinmap/pinmap.csv
 python3 tools/check_bom.py --boards 3  # shortfall table from hardware/bom/*.csv
 python3 hardware/calc/design_calcs.py  # every number quoted in docs/
+python3 hardware/calc/cycloidal_calcs.py --self-test   # reducer geometry, checked against upstream
 python3 tools/gen_board_docs.py        # regenerates docs/07, docs/08, hardware/wiring/wiring_diagram.svg and the build-sheet page
 python3 tools/gen_kicad.py             # regenerates hardware/kicad/ from tools/board_design.py
 python3 tools/check_design.py          # kicad-cli netlist vs board_design.py, pin for pin
@@ -59,6 +60,7 @@ python3 tools/check_design.py          # kicad-cli netlist vs board_design.py, p
 docs/                     analysis, architecture, decisions
 hardware/bom/             inventory.csv (what exists) · per_board.csv (what spin 1 needs)
 hardware/calc/            design_calcs.py — sense range, DRV8313 thermal, buck/SS14, cap ratings, PWM, CAN load, AS5600-through-cycloidal, spin-2 reference
+                          cycloidal_calcs.py — reducer ratio and profile validity (ported from woodenCariper's Fusion CycloidalDrive, MIT)
 hardware/pinmap/          pinmap.csv — single source of truth for the MCU pins
 hardware/kicad/           generated KiCad 7 project (schematic, outline, project libs)
 hardware/vendor/          SimpleFOC Mini board file (MIT) — the socket footprint is generated from it

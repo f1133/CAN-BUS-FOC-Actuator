@@ -98,7 +98,8 @@
 /* Output side (joint position, absolute through the cycloidal): SPI on J5. */
 #define ENC_J_BITS                14U         /* MT6701 / AS5047P */
 #define ENC_J_SPI_HZ              1000000UL
-#define GEAR_RATIO                15.0f       /* cycloidal — set to the real ratio */
+#define GEAR_RATIO                15.0f       /* cycloidal = ring pins - 1, 16 pins;
+                                                 hardware/calc/cycloidal_calcs.py */
 
 /* ---- CAN --------------------------------------------------------------- */
 #define CAN_BITRATE               1000000UL   /* SN65HVD230 limit */
