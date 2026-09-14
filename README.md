@@ -31,7 +31,7 @@ with four things left to buy.
 4. [`docs/04-firmware-capability.md`](docs/04-firmware-capability.md) — loop structure, CPU budget, dual-encoder scheme, bring-up order.
 5. [`docs/05-can-protocol.md`](docs/05-can-protocol.md) — frame layout.
 6. [`docs/06-spin1-decisions.md`](docs/06-spin1-decisions.md) — decisions, ranked bottleneck upgrades, encoder mounting, first-PCB checklist.
-7. [`docs/07-single-board-bom-and-wiring.md`](docs/07-single-board-bom-and-wiring.md) — designator-level BOM, pin-by-pin connections, wiring diagram (generated).
+7. [`docs/07-single-board-bom-and-wiring.md`](docs/07-single-board-bom-and-wiring.md) — module wiring (what plugs into what), the three-joint harness, the cable list, pin-by-pin connections and the designator-level BOM (generated).
 8. [`docs/08-board-spec-and-arm-capability.md`](docs/08-board-spec-and-arm-capability.md) — final board specification and what the arm gets from it (generated).
 
 ## KiCad project

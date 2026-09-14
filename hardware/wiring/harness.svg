@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 540" role="img" aria-label="Three joints daisy-chained: one 12 V 5 A supply enters joint 1 and passes through each board to the next, and one CAN bus runs the same way, terminated at the adapter and at joint 3." font-family="Barlow, Arial, sans-serif">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1B211D"/></marker></defs>
+<text x="40" y="42" font-size="20" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">Three joints, one supply, one bus</text>
+<text x="40" y="62" font-size="12.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">Power and CAN run in the same bundle and daisy-chain through every board.</text>
+<rect x="40" y="110" width="200" height="120" rx="3" fill="#FFFFFF" stroke="#B5652E" stroke-width="1.6"/>
+<text x="52" y="132" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#B5652E">12 V 5 A PSU</text>
+<text x="52" y="148" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">+12 V  ·  GND</text>
+<text x="52" y="165" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D"></text>
+<text x="52" y="182" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">feeds all three</text>
+<rect x="40" y="300" width="200" height="120" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
+<text x="52" y="322" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">USB-CAN adapter</text>
+<text x="52" y="338" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">1 Mbps classic CAN</text>
+<text x="52" y="356" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">CANH CANL GND</text>
+<text x="52" y="373" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">120 R fitted here</text>
+<rect x="330" y="130" width="300" height="250" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
+<text x="342" y="152" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">JOINT 1</text>
+<text x="342" y="168" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">carrier + Mini + motor</text>
+<text x="342" y="186" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">node ID 1   (PC13-15 straps)</text>
+<text x="342" y="203" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J1  12 V in      J13 12 V out</text>
+<text x="342" y="220" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J9  CAN in       J10 CAN out</text>
+<text x="342" y="237" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J2 motor · J3 AS5600 · J5 enc</text>
+<text x="342" y="254" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D"></text>
+<text x="342" y="271" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">R14 / R15 left open</text>
+<rect x="730" y="130" width="300" height="250" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
+<text x="742" y="152" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">JOINT 2</text>
+<text x="742" y="168" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">carrier + Mini + motor</text>
+<text x="742" y="186" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">node ID 2   (PC13-15 straps)</text>
+<text x="742" y="203" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J1  12 V in      J13 12 V out</text>
+<text x="742" y="220" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J9  CAN in       J10 CAN out</text>
+<text x="742" y="237" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J2 motor · J3 AS5600 · J5 enc</text>
+<text x="742" y="254" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D"></text>
+<text x="742" y="271" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">R14 / R15 left open</text>
+<rect x="1130" y="130" width="300" height="250" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
+<text x="1142" y="152" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">JOINT 3</text>
+<text x="1142" y="168" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">carrier + Mini + motor</text>
+<text x="1142" y="186" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">node ID 3   (PC13-15 straps)</text>
+<text x="1142" y="203" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J1  12 V in      J13 12 V out</text>
+<text x="1142" y="220" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J9  CAN in       J10 CAN out</text>
+<text x="1142" y="237" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J2 motor · J3 AS5600 · J5 enc</text>
+<text x="1142" y="254" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D"></text>
+<text x="1142" y="271" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">R14 + R15 fitted</text>
+<text x="1142" y="360" font-size="11" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#A33A2E">last board on the bus: terminate here</text>
+<polyline points="240,175 330,175" fill="none" stroke="#B5652E" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="285" y="151" font-size="12" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#B5652E">W5</text>
+<text x="285" y="165" font-size="11" text-anchor="middle" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">12 V</text>
+<polyline points="240,340 300,340 300,250 330,250" fill="none" stroke="#1B211D" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="248" y="312" font-size="12" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">W7</text>
+<text x="248" y="326" font-size="11" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">CAN</text>
+<polyline points="630,175 730,175" fill="none" stroke="#B5652E" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="680.0" y="151" font-size="12" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#B5652E">W6 -&gt; W5</text>
+<text x="680.0" y="165" font-size="11" text-anchor="middle" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">12 V</text>
+<polyline points="630,250 730,250" fill="none" stroke="#1B211D" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="680.0" y="226" font-size="12" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">W8 -&gt; W7</text>
+<text x="680.0" y="240" font-size="11" text-anchor="middle" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">CAN</text>
+<polyline points="1030,175 1130,175" fill="none" stroke="#B5652E" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="1080.0" y="151" font-size="12" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#B5652E">W6 -&gt; W5</text>
+<text x="1080.0" y="165" font-size="11" text-anchor="middle" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">12 V</text>
+<polyline points="1030,250 1130,250" fill="none" stroke="#1B211D" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="1080.0" y="226" font-size="12" text-anchor="middle" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">W8 -&gt; W7</text>
+<text x="1080.0" y="240" font-size="11" text-anchor="middle" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">CAN</text>
+<text x="1442" y="179" font-size="11" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">J13 left open</text>
+<text x="1442" y="254" font-size="11" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">J10 left open</text>
+<text x="40" y="450" font-size="12.5" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#A33A2E">Joint 1&#x27;s board carries the whole 5 A: make its J1 -&gt; J13 pass-through trace at least 2 mm wide.</text>
+<text x="40" y="474" font-size="12" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">Bus load at 1 kHz with 4-byte commands and 8-byte feedback is about 68 % — see docs/05.</text>
+<text x="40" y="496" font-size="12" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">Termination: 120 R at the adapter and on joint 3 only; the middle boards leave R14/R15 unfitted.</text>
+</svg>
