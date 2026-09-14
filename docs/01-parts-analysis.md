@@ -27,10 +27,11 @@ table from `tools/check_bom.py --boards 3`.
   One 30 mΩ per phase gives ±2.5 A, which is exactly the DRV8313's peak.
   8 INA240 = 2 per board (+2 spare) → 2-shunt FOC, Ic = −Ia−Ib.
 * **SN65HVD230 ×4 + 120 Ω ×100** → 3.3 V classic CAN, 3 nodes + spare.
-* **CD43 3.3 µH ×4 + SS14** → the carrier's own 3.3 V buck. The Mini's 3.3 V
-  pin is the DRV8313's LDO, 30 mA max — not enough for MCU + CAN + INA240 +
-  AS5600 (~100 mA), so it stays **unconnected**.
-* **AMS1117-3.3 ×5** → unused: the buck goes straight to 3.3 V.
+* **MP1584 module (on hand) → 5 V, AMS1117-3.3 → 3V3.** The module's
+  trimmer sets 5 V (drift-tolerant); the LDO holds 3.3 V fixed and clean for
+  VDDA at 0.17 W. CD43 + SS14 unused. The Mini's 3.3 V pin is the DRV8313's
+  LDO, 30 mA max — not enough for MCU + CAN + INA240 + AS5600 (~100 mA), so
+  it stays **unconnected**.
 * **8 MHz crystal + 30 pF** → HSE for CAN timing.
 * **470 µF 50 V ×6** → two at the DC input per board (the Mini adds 100 µF).
 * **10 µF 25 V ×14** → 3.3 V rail only (101 % of rating at 25.2 V).
@@ -49,7 +50,7 @@ Invoice resistor lines, re-checked: **4.7 k ×16, 10 k ×30, 0 Ω ×44, 120 Ω
 
 | | |
 |---|---|
-| VM | 8–24 V per the Mini README (DRV8313 60 V; the Mini's 100 µF is 35 V) → **24 V bus OK** |
+| VM | 8–24 V per the Mini README (DRV8313 60 V; the Mini's 100 µF is 35 V). The arm runs at **12 V from one shared 5 A PSU** over the harness; 24 V stays a PSU-only option |
 | Peak phase current | 2.5 A (DRV8313 rating) |
 | Continuous | ≈ 1.5 A rms — conduction 3 × I² × 0.2 Ω ≈ 1.35 W on the Mini's 26×20 mm board, ~55 °C rise; 1.75 A rms is "hot" |
 | Control | 3-PWM (IN1-3) + EN; dead time internal; nSLEEP, nRESET, nFAULT |
@@ -72,10 +73,10 @@ saturates just where the driver's own OCP takes over. **6 shunts for 3 boards.**
 
 | Parameter | Value | Set by |
 |---|---|---|
-| DC bus | **24 V** (8–26 V) | Mini rating; MP1584 28 V; caps 50 V |
+| DC bus | **12 V** system (board rated 8–26 V) | one 12 V / 5 A PSU over the CAN harness, J1 in → J13 out |
 | Peak phase current | **±2.5 A** | DRV8313 = INA240 range |
 | Continuous phase current | **~1.5 A rms** | DRV8313 thermal on the Mini |
-| Peak / continuous electrical | ≈ 60 W / ≈ 40 W | |
+| Peak / continuous electrical | ≈ 30 W / ≈ 20 W per joint at 12 V | a high-R gimbal motor is voltage-limited before the driver: see docs/08 |
 | Carrier dissipation | ≈ 0.5 W (the Mini dissipates its own ~1.4 W) | 2-layer 1 oz fine |
 | PWM | 20 kHz centre-aligned, 12.1-bit, 3-PWM | TIM1 @ 170 MHz |
 | Upgrade | spin 2: discrete bridge with the AO3400s in the drawer → ±5 A (docs/06) | |
@@ -85,16 +86,19 @@ saturates just where the driver's own OCP takes over. **6 shunts for 3 boards.**
 3 joints at 1 kHz: 4-byte command + 8-byte feedback = 68 % bus load. Footprint
 is pin-compatible with TCAN332 (3.3 V, 5 Mbps CAN-FD) for later.
 
-### 2.5 Logic supply — MP1584EN direct to 3.3 V
+### 2.5 Logic supply — MP1584 module → 5 V → AMS1117-3.3 → 3V3
 
-VBUS→3.3 V at ~1 MHz with the 3.3 µH: t_on 137 ns at 24 V, ripple 0.86 A,
-inductor peak 0.53 A (Isat 1 A), DCM. **SS14** (40 V, 1 A) is the catch
-diode — 24 V < 40 V, 0.53 A < 1 A. RFREQ 100 k from the THT kit. Feedback
-10 k + 4.7 k / 4.7 k → 3.30 V. Everything analog is ratiometric to this rail.
+The MP1584EN mini module on hand (4 pads, trimmer) makes 5 V — a proven
+circuit instead of a discrete MP1584EN whose BST/COMP values are not verified
+here. The AMS1117-3.3 from the invoice then makes the 3.3 V rail: fixed
+regardless of the trimmer (a drift to 3.6 V+ would kill the MCU), LDO-clean
+for VDDA, 0.17 W at 100 mA. Trim the module to 5.00 V before soldering it
+down. SS14 and CD43 stay in the drawer. Everything analog is ratiometric to
+3V3.
 
 ### 2.6 Connectors
 
-* J1 JST-VH 2P — DC in. J6 JST-VH 2P — VM out, wired to the Mini's terminal.
+* J1 JST-VH 2P — 12 V in. J13 JST-VH 2P — 12 V out to the next joint (pass-through). J6 JST-VH 2P — VM out, wired to the Mini's terminal.
 * J2 JST-XH 3P — phases (~3 A/pin; fine at 2.5 A peak).
 * J3 JST-XH 5P — 3V3, GND, SCL, SDA, NTC → AS5600 + thermistor.
 * J4 / J5 1×6 (from the female strip) — SPI_A (motor-side upgrade), SPI_B
@@ -118,29 +122,29 @@ diode — 24 V < 40 V, 0.53 A < 1 A. RFREQ 100 k from the THT kit. Feedback
 | CD43 3.3 µH | 1 | 3 | 4 | OK |
 | 8 MHz crystal / 30 pF | 1 / 2 | 3 / 6 | 6 / 12 | OK |
 | 470 µF 50 V | 2 | 6 | 6 | OK, zero spare |
-| 10 µF 25 V | 2 | 6 | 14 | OK |
-| 100 nF 250 V | 10 | 30 | 50 | OK |
+| AMS1117-3.3 | 1 | 3 | 5 | OK |
+| 10 µF 25 V | 3 | 9 | 14 | OK |
+| 100 nF 250 V | 11 | 33 | 50 | OK |
 | 1 µF 50 V | 4 | 12 | 22 | OK |
 | 10 k / 4.7 k / 2.2 k / 120 Ω / 0 Ω | 6 / 4 / 6 / 1 / 5 | 18 / 12 / 18 / 3 / 15 | 30 / 16 / 100 / 100 / 44 | OK |
 | Red LED | 2 | 6 | 9 | OK |
 | NTC | 1 | 3 | 5 | OK |
-| JST-VH 2P | 2 | 6 | 10 | OK |
+| JST-VH 2P | 3 | 9 | 10 | OK, one spare |
 | JST-XH 3P | 3 | 9 | 10 | OK, one spare |
 | JST-XH 5P | 1 | 3 | 5 | OK |
 | 1×40 female header | 19 pos | 57 | 160 | OK |
-| AMS1117, AO3481, AO3400, HC49/U, copper clad | 0 | — | — | not used |
+| AO3481, AO3400, HC49/U, CD43, SS14, copper clad | 0 | — | — | not used |
 
 ## 4. What to buy
 
 | # | Part | Qty | Why |
 |---|---|---|---|
-| 1 | **MP1584EN** | 4 | VBUS→3.3 V buck IC (inductor, diode, caps and resistors are on hand) |
-| 2 | Male pin header strip (for 2×5 + 1×3 per board) | 1 strip | Mini socket — skip if your Mini came with male pins (then use the female strip you have) |
-| 3 | SMBJ26A | 4 | VBUS hot-plug clamp — optional |
-| 4 | 2-layer PCB, Lion Circuits | 5 | |
+| 1 | Male pin header strip (for 2×5 + 1×3 per board) | 1 strip | Mini socket — skip if your Mini came with male pins (then use the female strip you have) |
+| 2 | SMBJ15A | 4 | VBUS hot-plug clamp — optional |
+| 3 | 2-layer PCB, Lion Circuits | 5 | |
 
 That is the whole list. Counts to confirm on hand: SimpleFOC Mini ≥ 3,
-STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, SS14 ≥ 3. Optional later: MT6701
+STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, MP1584 module ≥ 3. Optional later: MT6701
 breakout + 6 × 2.5 mm diametric magnet ×3 for the joint encoder on J5.
 
 ## 5. The copper-clad boards are not usable for this design
@@ -157,5 +161,5 @@ the carrier, 1 oz is enough.
 | Current sense | none | 2 × INA240 inline, ±2.5 A |
 | Interface | PWM pins | CAN 1 Mbps, node-ID straps |
 | Encoder | external | AS5600 (I2C) + two SPI ports |
-| Supply | 3.3 V @ 30 mA from DRV8313 | own 3.3 V buck |
+| Supply | 3.3 V @ 30 mA from DRV8313 | own 5 V module + AMS1117 3.3 V |
 | Protection | DRV8313 internal | + TIM1 hardware break on nFAULT, SW OCP, TVS, NTC |

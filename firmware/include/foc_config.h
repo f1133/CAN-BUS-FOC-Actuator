@@ -65,8 +65,10 @@
 /* ---- Bus limits -------------------------------------------------------- */
 #ifndef BRIDGE_DISCRETE
 #define VBUS_MIN_V                8.0f        /* DRV8313 UVLO */
-#define VBUS_MAX_V                26.0f       /* Mini: 24 V nominal, 35 V cap */
-#define VBUS_NOMINAL_V            24.0f
+#define VBUS_MAX_V                16.0f       /* 12 V PSU system; hardware itself is good to 26 V */
+#define VBUS_NOMINAL_V            12.0f
+#define PSU_CURRENT_A             5.0f        /* one PSU shared by all joints over the CAN harness */
+#define N_JOINTS                  3U
 #elif defined(BRIDGE_FET_AOD4184)
 #define VBUS_MIN_V                10.0f
 #define VBUS_MAX_V                28.0f

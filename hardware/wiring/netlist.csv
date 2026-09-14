@@ -1,0 +1,99 @@
+block,pin,signal,to,notes
+J7 — Mini H1 socket (2×5 male),1,GND,GND,
+J7 — Mini H1 socket (2×5 male),2,3.3V-out,not connected,DRV8313 V3P3OUT 30 mA — never tie to the carrier 3V3
+J7 — Mini H1 socket (2×5 male),3,IN1,U1 PA8 (TIM1_CH1),phase A PWM
+J7 — Mini H1 socket (2×5 male),4,GND,GND,
+J7 — Mini H1 socket (2×5 male),5,IN2,U1 PA9 (TIM1_CH2),phase B PWM
+J7 — Mini H1 socket (2×5 male),6,nRESET,U1 PB15,10 k pull-up on the Mini; pulse low to clear a latched fault
+J7 — Mini H1 socket (2×5 male),7,IN3,U1 PA10 (TIM1_CH3),phase C PWM
+J7 — Mini H1 socket (2×5 male),8,nSLEEP,U1 PB14,10 k pull-up on the Mini; high = awake
+J7 — Mini H1 socket (2×5 male),9,EN,U1 PB2 via R20 (0 Ω); R2 10 k to GND,bridge-disable jumper R20 open for first power-up
+J7 — Mini H1 socket (2×5 male),10,nFAULT,U1 PB12 (TIM1_BKIN),open-drain 10 k pull-up on the Mini; hardware break
+J8 — Mini P1 socket (1×3 male),1,OUT3,J2.3 (phase C),unsensed; Ic = −(Ia + Ib)
+J8 — Mini P1 socket (1×3 male),2,OUT2,RS2 → J2.2 (phase B),U4 IN+ on the Mini side IN− on the motor side
+J8 — Mini P1 socket (1×3 male),3,OUT1,RS1 → J2.1 (phase A),U3 IN+ on the Mini side IN− on the motor side
+Mini screw terminal,VM,VBUS,J6.1 by wire W1,
+Mini screw terminal,GND,GND,J6.2 by wire W1,
+J1 — 12 V in (JST-VH 2P),1,VBUS,J13.1 (pass-through) · D1 · C3 · C4 · J6.1 · U7 IN+ · R4,12 V from the shared 5 A PSU; board rated 8–26 V
+J1 — 12 V in (JST-VH 2P),2,GND,J13.2 · GND,
+J13 — 12 V out (JST-VH 2P),1,VBUS,next board's J1.1,≥ 2 mm trace from J1 — the first board carries the whole 5 A
+J13 — 12 V out (JST-VH 2P),2,GND,next board's J1.2,
+J6 — VM out (JST-VH 2P),1,VBUS,C18 · wire W1 to Mini VM,
+J6 — VM out (JST-VH 2P),2,GND,wire W1 to Mini GND,
+U7 — MP1584 buck module,IN+,VBUS,C5 to GND,
+U7 — MP1584 buck module,IN−,GND,,
+U7 — MP1584 buck module,OUT+,5V0,C21 · C23 · U8 IN,trim to 5.00 V before soldering the module in
+U7 — MP1584 buck module,OUT−,GND,,
+U8 — AMS1117-3.3 (SOT-223),IN,5V0,from U7 OUT+,LDO drop 1.7 V at ~100 mA = 0.17 W
+U8 — AMS1117-3.3 (SOT-223),OUT,3V3,C6 · C7 · U1 VDD ×3 · U1 VBAT · R23 · U2 VCC · U3/U4 VS+REF1 · R3 · R9 · R17–R19 · J3.1 · J4.1 · J5.1 · J11.1,fixed 3.3 V regardless of the module trimmer
+U8 — AMS1117-3.3 (SOT-223),GND / tab,GND,,
+VDDA filter,R23 (0 Ω),3V3 → VDDA,C11 · C12 · C13 · U1 VDDA/VREF+,ferrite site
+U1 — STM32G431CBT6 support,VDD ×3 + VBAT,3V3,C8 C9 C10 one per VDD pin,
+U1 — STM32G431CBT6 support,VDDA / VREF+,VDDA,C11 C12 C13,
+U1 — STM32G431CBT6 support,VSS ×3 + VSSA,GND,,
+U1 — STM32G431CBT6 support,PF0 / PF1,Y1 8 MHz,C1 C2 30 pF to GND,HSE drive = high (20 pF crystal)
+U1 — STM32G431CBT6 support,NRST,C17 100 nF to GND,,
+U1 — STM32G431CBT6 support,PB8 (BOOT0),R1 10 k to GND,test point,
+U1 — STM32G431CBT6 support,PA2,VBUS ÷ 10.1,R4 + R5 (10 k) from VBUS; R6 (2.2 k) to GND,ADC1_IN3
+U1 — STM32G431CBT6 support,PA3,NTC node,R3 (10 k) from 3V3; J3.5,ADC1_IN4
+U1 — STM32G431CBT6 support,PA0,ISENSE_A,U3 OUT via R21 (0 Ω); C19 DNP to GND,ADC1_IN1
+U1 — STM32G431CBT6 support,PA1,ISENSE_B,U4 OUT via R22 (0 Ω); C20 DNP to GND,ADC2_IN2
+U1 — STM32G431CBT6 support,PA13 / PA14,SWDIO / SWCLK,J11.2 / J11.3,
+U1 — STM32G431CBT6 support,PB3 / PB4,UART TX / RX,J12.1 / J12.2,
+U1 — STM32G431CBT6 support,PB9,STATUS_LED,R10 (2.2 k) → LED2 → GND,
+U1 — STM32G431CBT6 support,PC13 / PC14 / PC15,NODE_ID0-2,R11–R13 (2.2 k) to GND; R17–R19 (0 Ω) to 3V3,strap = bit set
+U1 — STM32G431CBT6 support,PB6 / PB7,I2C1 SCL / SDA,J3.3 / J3.4; R7 R8 (4.7 k) to 3V3 DNP,AS5600 @0x36
+U1 — STM32G431CBT6 support,PA4 / PA15,CS_A / CS_B,J4.3 / J5.3,idle high
+U1 — STM32G431CBT6 support,PA5 / PA6 / PA7,SCK / MISO / MOSI,J4.4-6 and J5.4-6 in parallel,SPI1
+U1 — STM32G431CBT6 support,PA12 / PA11,CAN TX / RX,U2 D (pin 1) / U2 R (pin 4),FDCAN1
+U3 — INA240A1 (phase A),IN+,A+,RS1 pad on the Mini side (Kelvin trace from the pad edge),pin numbers per the INA240 D-package datasheet
+U3 — INA240A1 (phase A),IN−,A−,RS1 pad on the motor side (Kelvin trace),
+U3 — INA240A1 (phase A),VS,3V3,C14 100 nF to GND,
+U3 — INA240A1 (phase A),REF1,3V3,,REF1 = VS and REF2 = GND → output sits at 1.65 V at 0 A
+U3 — INA240A1 (phase A),REF2,GND,,
+U3 — INA240A1 (phase A),GND,GND,,
+U3 — INA240A1 (phase A),OUT,ISENSE_A,U1 PA0 via R21 (0 Ω); C19 DNP,0.60 V/A ±2.5 A
+U4 — INA240A1 (phase B),IN+,B+,RS2 pad on the Mini side,
+U4 — INA240A1 (phase B),IN−,B−,RS2 pad on the motor side,
+U4 — INA240A1 (phase B),VS · REF1,3V3,C15 100 nF to GND,
+U4 — INA240A1 (phase B),REF2 · GND,GND,,
+U4 — INA240A1 (phase B),OUT,ISENSE_B,U1 PA1 via R22 (0 Ω); C20 DNP,
+U2 — SN65HVD230 (SOIC-8),1,D,U1 PA12 (FDCAN1_TX),
+U2 — SN65HVD230 (SOIC-8),2,GND,GND,
+U2 — SN65HVD230 (SOIC-8),3,VCC,3V3; C16 100 nF to GND,
+U2 — SN65HVD230 (SOIC-8),4,R,U1 PA11 (FDCAN1_RX),
+U2 — SN65HVD230 (SOIC-8),5,Vref,not connected,also the NC pad for a TCAN332
+U2 — SN65HVD230 (SOIC-8),6,CANL,J9.2 · J10.2 · R14/R15,
+U2 — SN65HVD230 (SOIC-8),7,CANH,J9.1 · J10.1 · R14/R15,
+U2 — SN65HVD230 (SOIC-8),8,RS,R16 (0 Ω) to GND,high-speed mode (STB low on a TCAN332)
+J9 / J10 — CAN in / out (JST-XH 3P),1,CANH,U2.7 (paralleled),
+J9 / J10 — CAN in / out (JST-XH 3P),2,CANL,U2.6 (paralleled),
+J9 / J10 — CAN in / out (JST-XH 3P),3,GND,GND,
+CAN termination,R15 → R14,CANH → CANL,0 Ω + 120 Ω,populate on the two bus ends only
+J2 — motor (JST-XH 3P),1,A,RS1 motor side,
+J2 — motor (JST-XH 3P),2,B,RS2 motor side,
+J2 — motor (JST-XH 3P),3,C,J8.1 (Mini OUT3),
+J3 — encoder + NTC (JST-XH 5P),1,3V3,3V3,AS5600 board at 3.3 V
+J3 — encoder + NTC (JST-XH 5P),2,GND,GND,
+J3 — encoder + NTC (JST-XH 5P),3,SCL,U1 PB6,
+J3 — encoder + NTC (JST-XH 5P),4,SDA,U1 PB7,
+J3 — encoder + NTC (JST-XH 5P),5,NTC,U1 PA3 node (R3 to 3V3),thermistor from this pin to GND at the motor
+J4 — SPI_A (1×6),1,3V3,3V3,motor-side SPI encoder (future)
+J4 — SPI_A (1×6),2,GND,GND,
+J4 — SPI_A (1×6),3,CS_A,U1 PA4,
+J4 — SPI_A (1×6),4,SCK,U1 PA5,
+J4 — SPI_A (1×6),5,MISO,U1 PA6,
+J4 — SPI_A (1×6),6,MOSI,U1 PA7,
+J5 — SPI_B (1×6),1,3V3,3V3,output-side absolute encoder
+J5 — SPI_B (1×6),2,GND,GND,
+J5 — SPI_B (1×6),3,CS_B,U1 PA15,
+J5 — SPI_B (1×6),4,SCK,U1 PA5,
+J5 — SPI_B (1×6),5,MISO,U1 PA6,
+J5 — SPI_B (1×6),6,MOSI,U1 PA7,
+J11 — SWD (1×4),1,3V3,3V3,
+J11 — SWD (1×4),2,SWDIO,U1 PA13,
+J11 — SWD (1×4),3,SWCLK,U1 PA14,
+J11 — SWD (1×4),4,GND,GND,
+J12 — UART (1×3),1,TX,U1 PB3,
+J12 — UART (1×3),2,RX,U1 PB4,
+J12 — UART (1×3),3,GND,GND,

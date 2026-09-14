@@ -10,6 +10,7 @@ VDD = 3.3
 
 # SimpleFOC Mini v1.0 / DRV8313 (power stage, plugged in)
 MINI_VM_MIN, MINI_VM_MAX = 8.0, 24.0        # Mini README; DRV8313 itself is 60 V, the Mini's 100 uF is 35 V
+VBUS_SYS = 12.0                              # the arm runs from one 12 V 5 A PSU over the CAN harness
 DRV8313_I_PK = 2.5                          # A per phase
 DRV8313_RDS = 0.20                          # ohm per FET (HS+LS ~0.4 ohm typ, datasheet)
 DRV8313_THETA_JA = 40.0                     # C/W, HTSSOP-28 EP on the Mini's 26x20 mm 2-layer (estimate)
@@ -53,23 +54,25 @@ for label, r, n in (("single 30 mOhm (spin 1)", SHUNT_R, 1), ("2x 30 mOhm parall
 print(f"DRV8313 peak is {DRV8313_I_PK} A -> the single shunt's ±2.5 A range is an exact match; INA240 saturates where the driver's OCP takes over.")
 
 hr("2. Power stage: SimpleFOC Mini (DRV8313)")
-print(f"VM {MINI_VM_MIN:.0f}–{MINI_VM_MAX:.0f} V (6S full charge 25.2 V is inside the 35 V cap / 60 V IC ratings; stay ≤ 24 V nominal)")
+print(f"VM {MINI_VM_MIN:.0f}–{MINI_VM_MAX:.0f} V rating; the arm runs at {VBUS_SYS:.0f} V from the shared PSU (24 V remains a board option)")
 for i_rms in (1.0, 1.5, 1.75, 2.5 / math.sqrt(2)):
     p = 3 * i_rms**2 * DRV8313_RDS
     print(f"  {i_rms:.2f} A rms: conduction ≈ {p:.2f} W -> ΔT ≈ {p*DRV8313_THETA_JA:.0f} °C on the Mini  "
           f"({'OK' if p*DRV8313_THETA_JA < 60 else 'hot' if p*DRV8313_THETA_JA < 85 else 'too hot'})")
 print("-> plan on ~1.5 A rms continuous, 2.5 A peak.  Bolt the Mini's back to the carrier's ground pour or add airflow for more.")
 print(f"Mini 3.3 V pin = DRV8313 V3P3OUT, {DRV8313_V3P3_MAX_MA} mA max: NOT enough for MCU+CAN+INA240+AS5600 (~100 mA) -> leave it unconnected; carrier has its own buck.")
-print(f"Electrical power, rough (VM x I): ~{MINI_VM_MAX*DRV8313_I_PK:.0f} W peak, ~{MINI_VM_MAX*1.5*1.1:.0f} W continuous")
+print(f"Electrical power at {VBUS_SYS:.0f} V, rough (V x I): ~{VBUS_SYS*DRV8313_I_PK:.0f} W peak, ~{VBUS_SYS*1.5*1.1:.0f} W continuous per joint")
 
-hr("3. Buck MP1584EN VBUS -> 3.3 V, CD43 3.3 uH, SS14")
+hr("3. Logic rails: MP1584 module -> 5 V -> AMS1117-3.3 -> 3V3")
+print(f"AMS1117 from 5 V at {LOGIC_LOAD_A*1000:.0f} mA: {(5.0-3.3)*LOGIC_LOAD_A:.2f} W, ΔT ≈ {(5.0-3.3)*LOGIC_LOAD_A*60:.0f} °C (SOT-223) -> OK; 3V3 fixed regardless of the module trimmer")
+print("Discrete MP1584EN numbers below kept for reference only (module is used):")
 for vin in (24.0, 16.0, 12.0):
     d = BUCK_VOUT / vin; t_on = d / BUCK_FSW; di = (vin - BUCK_VOUT) * d / (BUCK_FSW * BUCK_L); i_pk = LOGIC_LOAD_A + di / 2
     print(f"Vin {vin:4.1f} V: t_on {t_on*1e9:4.0f} ns ({'OK' if t_on > BUCK_TON_MIN*1.2 else 'near min'})  ΔI {di:.2f} A  I_L,pk {i_pk:.2f} A "
           f"({'OK' if i_pk < BUCK_L_ISAT else 'EXCEEDS Isat'})  SS14: {vin:.0f} V < {SS14_VR:.0f} V Vr, {i_pk:.2f} A < {SS14_IF:.0f} A -> OK")
 print(f"FB from stock: 10k + 4.7k over 4.7k -> {0.8*(1+14.7/4.7):.2f} V.  RFREQ 100 k from the THT kit.")
 
-hr("4. Capacitor voltage ratings on the 24 V bus")
+hr("4. Capacitor voltage ratings (checked at 25.2 V so the 24 V option stays open; at 12 V everything passes)")
 for name, vr in (("10 uF 25 V X7R", 25), ("1 uF 50 V X7R", 50), ("100 nF 250 V X7R", 250), ("470 uF 50 V electrolytic", 50), ("Mini's 100 uF 35 V", 35)):
     print(f"{name:28s}: {25.2/vr*100:3.0f} % at 25.2 V -> {'keep OFF VBUS' if 25.2/vr > 0.8 else 'OK'}")
 
@@ -89,11 +92,26 @@ for joint_dps in (60, 180, 360):
           f"({'fine' if AS5600_READ_HZ/f_e >= 8 else 'extrapolate' if AS5600_READ_HZ/f_e >= 4 else 'SPI encoder'})")
 print("AS5600 CONF SF=2x at boot (0.29 ms vs 2.2 ms).  Joint-absolute position needs the output-side SPI encoder on J5.")
 
-hr("8. Carrier power budget @ 1.5 A rms, 24 V")
+hr("8. Carrier power budget @ 1.5 A rms")
 p_sh = 2 * 1.5**2 * SHUNT_R; p_mini = 3 * 1.5**2 * DRV8313_RDS; p_lg = VDD * LOGIC_LOAD_A / 0.85
 print(f"Mini {p_mini:.2f} W (on the Mini) + shunts {p_sh:.2f} W + logic incl. buck loss {p_lg:.2f} W = {p_mini+p_sh+p_lg:.2f} W -> 2-layer 1 oz is fine; 2 oz if offered")
 
-hr("9. Spin 2 reference — discrete 6-PWM bridge with the AO3400s in the drawer")
+hr("9. Arm capability at 12 V — per joint, then the shared 5 A PSU")
+import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))
+import arm_model as am
+print(f"Vbus {am.VBUS:.0f} V, driver {am.I_DRV_PK} A pk, cycloidal x{am.RATIO} at {am.ETA:.0%}, reach {am.REACH_M} m for the payload column")
+print(f"{'motor (typical values)':38s} {'Kv':>4} {'R':>5}  {'Iq stall':>9} {'limit':>14} {'T motor':>8} {'T joint':>8} {'joint °/s':>9} {'bus A@stall':>11} {'AS5600 rd/cyc':>13} {'payload@0.3m':>12}")
+tot = 0
+for name, j in am.table():
+    tot += j["i_bus_stall"]
+    print(f"{name:38s} {j['kv']:4.0f} {j['r']:5.1f}  {j['iq']:6.2f} A  {j['limit']:>14} {j['t_m']:6.3f}   {j['t_j']:6.2f}   {j['dps_j']:7.0f}   {j['i_bus_stall']:8.2f}    {j['reads']:8.1f}      {j['payload']:6.2f} kg")
+print(f"Three joints all at stall (worst case hold): sum of the bus currents above per motor type <= {am.PSU_A} A PSU -> "
+      + ", ".join(f"{name.split(' ')[0]} {3*j['i_bus_stall']:.1f} A" for name, j in am.table()))
+print("At 24 V the same high-R gimbal motors reach 2x the stall current -> 2x joint torque: "
+      + ", ".join(f"{name.split(' ')[0]} {j24['t_j']:.2f} N·m" for (name, j24) in am.table(vbus=24.0)))
+print("Motor speed >~1000 rpm (low-R rows) drops below ~4 AS5600 reads per electrical cycle -> that motor wants the J4 SPI encoder.")
+
+hr("10. Spin 2 reference — discrete 6-PWM bridge with the AO3400s in the drawer")
 for name, f in FETS.items():
     p_allow = (125 - 40) / f["theta_ja"]; t_sw = 3 * 22 * f["ciss"]; p_sw = 0.5 * f["vbus_full"] * 3.5 * 2 * t_sw * PWM_F
     i_rms = math.sqrt(max(p_allow - p_sw, 0) * 2 / (f["rds_10v"] * 1.5))

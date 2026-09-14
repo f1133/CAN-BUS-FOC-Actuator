@@ -3,28 +3,26 @@ SIMPLEFOCMINI,1,U6 power stage (DRV8313) plugged into J7 (2x5) + J8 (1x3); VM/GN
 STM32G431CBT6,1,U1 MCU,bought
 SN65HVD230DR,1,U2 CAN transceiver (footprint also fits TCAN332 for 5 Mbps FD later),yes
 INA240A1DR,2,U3 U4 phase A/B inline current sense,yes
-CD43-3R3,1,L1 3.3 V buck inductor,yes
-SS14,1,D1 MP1584 catch diode,have
 X49SM8MSD2SC,1,Y1 HSE,yes
 C-30p-1206,2,C_Y1a C_Y1b crystal load,yes
 C-470u-50V,2,C_BULK1 C_BULK2 DC link at J1 (the Mini adds its own 100 uF),yes
-C-10u-25V-1206,2,3V3 rail only: buck out + VDDA (25 V parts must NOT go on the 24 V bus),yes
-C-100n-1206,10,MCU VDD x3 VDDA INA240 x2 CAN NRST MP1584-in HF VM-to-Mini (250 V parts: fine on VBUS),yes
+C-10u-25V-1206,3,5V0 (U8 in) + 3V3 (U8 out) + VDDA — 25 V parts never on VBUS,yes
+C-100n-1206,11,MCU VDD x3 VDDA INA240 x2 CAN NRST U7-in HF 5V0 VM-to-Mini (250 V parts: fine on VBUS),yes
 C-1u-50V-1206,4,VDDA VREF MP1584 input 3V3 out (50 V: fine on VBUS),yes
 R-10k-1206,6,BOOT0 pd DRV_EN pd NTC bias VBUS div top x2 buck FB top (nFAULT/nSLEEP/nRESET pull-ups are on the Mini),yes
 R-4k7-1206,4,buck FB (10k+4k7 top / 4k7 bottom = 3.30 V) x2; I2C pull-ups x2 (DNP if AS5600 module has them),yes
 R-2k2-1206,6,LED x2 VBUS div bottom ID pull-downs x3,yes
 R-120R-1206,1,CAN termination (via 0R select),yes
 R-0R-1206,5,ID straps x3 CAN-term select CAN RS/STB-to-GND,yes
-R-100k-THT,1,MP1584 fsw set (~1 MHz) — from the THT kit,have
 LED-RED-1206,2,status + power,yes
 ERJ8CWFR030V,2,R_SH_A R_SH_B: one 30 mOhm per phase between Mini OUT1/OUT2 and J2 (0.6 V/A -> ±2.5 A),bought
 NTC-MF52E103,1,motor winding temperature on J3 pin 5,yes
-JST-VH-2P-RA,2,J1 DC in + J6 VM out to the Mini screw terminal,yes
+JST-VH-2P-RA,3,J1 12 V in + J13 12 V out (harness pass-through) + J6 VM to the Mini terminal,yes
 JST-XH-3P-RA,3,J2 motor phases + CAN in / CAN out (CANH CANL GND),yes
 JST-XH-5P-RA,1,J3 AS5600 + NTC: 3V3 GND SCL SDA NTC,yes
 HDR-1x40-F-SMT,19,SWD (4) + UART (3) + J4 SPI_A (6) + J5 SPI_B (6) — cut from strip,yes
 HDR-MALE-2x5+1x3,1,J7/J8 Mini socket: male pins to mate the Mini female headers (use the female strip instead if your Mini came with male pins),NO — MISSING
-BUCK-MP1584EN,1,U7 VBUS -> 3.3 V direct ~1 MHz,NO — MISSING
-TVS-SMBJ26A,1,VBUS hot-plug clamp (optional),NO — MISSING
+MP1584-MODULE,1,U7 MP1584EN mini buck module trimmed to 5.00 V,bought
+AMS1117-3.3,1,U8 5 V -> fixed 3.3 V LDO (immune to the module trimmer),yes
+TVS-SMBJ15A,1,VBUS hot-plug clamp for the 12 V system (optional),NO — MISSING
 PCB-2LAYER,1,~60x60 mm 2-layer Lion Circuits,NO — MISSING

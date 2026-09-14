@@ -8,8 +8,9 @@ Decisions taken for the first PCB order, and what each one changed.
 |---|---|
 | **The SimpleFOC Mini is the power stage**, plugged into the board. | The board is a carrier: STM32G431, CAN, 2 × INA240 inline sense, buck, encoder ports, Mini socket. No gate driver, gate rail, gate resistors or discrete FETs. 3-PWM control (IN1-3 + EN), nSLEEP/nRESET on GPIOs, nFAULT to the TIM1 break input. The Mini's 3.3 V pin stays unconnected (30 mA LDO; must not be paralleled with the carrier rail). |
 | **One board drives one motor.** | Three carriers, three Minis, three motors. |
-| **Max spec from the parts.** | The DRV8313's 2.5 A peak is matched exactly by one 30 mΩ + INA240A1 (±2.5 A, 1.3 mA/LSB): 6 shunts total. ~1.5 A rms continuous from the Mini's thermal budget. 24 V bus. |
-| **No 5 V rail.** | MP1584EN straight to 3.3 V with the CD43 3.3 µH and the **SS14** on hand (40 V, 1 A: 0.53 A peak at 24 V). 100 k from the **THT kit**. AMS1117 unused. |
+| **Max spec from the parts.** | The DRV8313's 2.5 A peak is matched exactly by one 30 mΩ + INA240A1 (±2.5 A, 1.3 mA/LSB): 6 shunts total. ~1.5 A rms continuous from the Mini's thermal budget. |
+| **One 12 V / 5 A PSU for the whole arm, over the harness.** | Bus 12 V; each board passes power through J1 → J13 (≥ 2 mm trace, the first board carries all 5 A). At 12 V a gimbal winding, not the driver, sets stall current ((12 V/√3)/R); 24 V would double it with no board change — docs/08. |
+| **Logic supply: module → 5 V → AMS1117-3.3.** | The **MP1584 module on hand** (proven circuit; a discrete MP1584EN's BST/COMP values are unverified here) is trimmed to 5 V; the AMS1117-3.3 from the invoice makes 3V3 fixed and LDO-clean, so a bumped trimmer cannot put 3.6 V+ on the MCU. 0.17 W. CD43 and SS14 unused. |
 | **AS5600 motors** (as shipped). | I2C1 on J3 = 3V3, GND, SCL, SDA, NTC — one cable to the motor. |
 | **Cycloidal actuator.** | Motor-side encoder cannot give joint-absolute position → **SPI encoder on the output shaft (J5)**. Second AS5600 impossible (fixed address), hence SPI. |
 | **SPI for future encoder upgrade.** | J4 (PA4 CS, motor side) and J5 (PA15 CS, output side) on SPI1; PA7 = MOSI. |
@@ -27,6 +28,7 @@ Decisions taken for the first PCB order, and what each one changed.
 | 3 | Motor-side encoder | AS5600 I2C, 1 kHz, 12-bit | MT6701 / AS5047P on **J4** — no PCB change | ~₹150 |
 | 4 | Joint-absolute position | none without J5 (homing at boot) | MT6701 / AS5047P + 6 mm diametric magnet on the output shaft, **J5** — no PCB change | ~₹150 + magnet |
 | 5 | CAN bandwidth | 1 Mbps classic, 68 % at 1 kHz × 3 joints | TCAN332 in the same footprint — no PCB change | ~₹80 |
+| 7 | Joint torque with high-R gimbal motors | voltage-limited at 12 V | 24 V PSU: 2× stall current on a 6–10 Ω winding, board and Mini unchanged | one PSU |
 | 6 | Phase connector | JST-XH 3-pin ~3 A/pin | only matters for spin 2 | — |
 
 ## Encoder mounting (3D-printed)
@@ -67,7 +69,7 @@ rotation axis of the cycloidal output — so plan the parts around that:
 
 | Flag | Effect |
 |---|---|
-| (default) | SimpleFOC Mini: 3-PWM, 30 mΩ, ±2.5 A, VBUS 8–26 V |
+| (default) | SimpleFOC Mini: 3-PWM, 30 mΩ, ±2.5 A, VBUS 8–16 V (12 V PSU) |
 | `-DBRIDGE_DISCRETE` | spin-2 6-PWM bridge: 15 mΩ, ±5 A, dead time 400 ns, AO3400 limits (16 V) |
 | `-DBRIDGE_DISCRETE -DBRIDGE_FET_AOD4184` | spin-2 with AOD4184: 24 V |
 | `GEAR_RATIO` | set to the real cycloidal ratio in `foc_config.h` |

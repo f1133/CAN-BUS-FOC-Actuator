@@ -1,8 +1,8 @@
 part,description,package,qty_on_hand,source,notes
 STM32G431CBT6,STM32G4 Cortex-M4F 170 MHz 128 KB flash,LQFP-48,0,evelta — BOUGHT (count not confirmed),Need 3 (1 per board); confirm ≥ 3
 SN65HVD230DR,CAN transceiver 3.3 V 1 Mbps,SOIC-8,4,Robu invoice 3680169 line 1,Classic CAN only; no CAN-FD data-phase >1 Mbps
-CD43-3R3,3.3 µH 1 A shielded power inductor,CD43,4,Robu invoice line 2,Sized for ~1.4 MHz 24->5 V buck at <300 mA
-AMS1117-3.3,1 A LDO 3.3 V (Vin max 15 V),SOT-223,5,Robu invoice line 3,NOT USED in spin 1 (buck goes direct to 3.3 V); keep as spares
+CD43-3R3,3.3 µH 1 A shielded power inductor,CD43,4,Robu invoice line 2,NOT USED in spin 1 (MP1584 module has its own inductor)
+AMS1117-3.3,1 A LDO 3.3 V (Vin max 18 V),SOT-223,5,Robu invoice line 3,U8: 5 V from the MP1584 module -> fixed 3.3 V (0.17 W); 1 per board
 INA240A1DR,Current-sense amp gain 20 V/V -4..80 V CM PWM rejection,SOIC-8,8,Robu invoice line 4,2 per board (2-shunt inline) = 6 used
 X49SM8MSD2SC,8 MHz crystal 20 pF ±20 ppm,HC-49S SMD,6,Robu invoice line 5,HSE for MCU
 HC49U-8MHz,8 MHz crystal THT,HC-49/U,2,Robu invoice line 6,spare / breadboard use
@@ -36,5 +36,6 @@ AO3400A,N-ch MOSFET 30 V 5.8 A 28 mΩ@10 V,SOT-23,0,BOUGHT (count not confirmed)
 ERJ8CWFR030V,30 mΩ 1 W 1 % current-sense,1206,0,BOUGHT (count not confirmed),1 per phase x 2 phases x 3 = 6 (±2.5 A matches the DRV8313 peak); confirm ≥ 6
 AOD4184,N-ch MOSFET 40 V 50 A 8 mΩ@10 V,TO-252,0,not bought,Spin-2 discrete bridge option only
 SIMPLEFOCMINI,SimpleFOC Mini v1.0 — DRV8313 3-phase driver module 8-24 V 2.5 A pk with 3.3 V LDO; 2x5 + 1x3 female headers + screw terminal,26x20 mm module,0,BOUGHT (count not confirmed),Spin-1 power stage. Need 3 (1 per board); confirm ≥ 3
-SS14,Schottky 40 V 1 A (SLKOR),SMA/DO-214AC,0,HAVE (robu.in SS14 — count not confirmed),MP1584 catch diode; 1 per board
+SS14,Schottky 40 V 1 A (SLKOR),SMA/DO-214AC,0,HAVE (robu.in SS14 — count not confirmed),NOT USED in spin 1 (module has its own diode)
 R-100k-THT,100 kΩ 1/4 W from the through-hole resistor kit,axial,0,HAVE (THT kit),MP1584 fsw set; the kit also covers any value not in the 1206 stock
+MP1584-MODULE,MP1584EN mini buck module (4 pads with trimmer),22x17 mm,0,BOUGHT (count not confirmed),U7 12 V -> 5 V stage; need 3 — trim to 5.00 V before fitting

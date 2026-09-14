@@ -1,0 +1,64 @@
+group,ref,qty,value,part,package,status,where,notes
+Modules & ICs,U1,1,STM32G431CBT6,MCU Cortex-M4F 170 MHz,LQFP-48,confirm,main controller,3 needed for 3 boards — confirm count on hand
+Modules & ICs,U2,1,SN65HVD230DR,CAN transceiver 3.3 V 1 Mbps,SOIC-8,onhand,CAN,footprint also fits TCAN332 (5 Mbps FD) later
+Modules & ICs,U3,1,INA240A1DR,current-sense amp gain 20,SOIC-8,onhand,phase A shunt RS1,REF1 = 3V3 REF2 = GND → 1.65 V at 0 A
+Modules & ICs,U4,1,INA240A1DR,current-sense amp gain 20,SOIC-8,onhand,phase B shunt RS2,
+Modules & ICs,U6,1,SimpleFOC Mini v1.0,DRV8313 3-phase driver module,26×20 mm module,confirm,power stage on J7 + J8; VM by wire from J6,3 needed — confirm count; check whether its headers are female (design files) or male
+Modules & ICs,U7,1,MP1584EN mini buck module,VBUS → 5.00 V (trim before fitting),22×17 mm module 4 pads,confirm,5V0 stage,on hand — 3 needed. A proven module instead of the discrete MP1584EN circuit (its BST/COMP values are not verified here); SS14 + CD43 stay in the drawer
+Modules & ICs,U8,1,AMS1117-3.3,LDO 5 V → fixed 3.3 V,SOT-223,onhand,3V3 rail,makes 3V3 independent of the module trimmer; 0.17 W at 100 mA; also cleans VDDA
+Modules & ICs,D1,1,SMBJ15A,TVS 15 V standoff (12 V system),SMB,optional,across VBUS–GND at J1,hot-plug transients only; SMBJ26A if the arm ever moves to 24 V
+Modules & ICs,LED1,1,Red 1206,power LED,1206,onhand,3V3 → R9 → LED1 → GND,
+Modules & ICs,LED2,1,Red 1206,status LED,1206,onhand,PB9 → R10 → LED2 → GND,
+Passives,Y1,1,8 MHz,X49SM8MSD2SC crystal CL 20 pF,HC-49S SMD,onhand,PF0 / PF1,
+Passives,C1 C2,2,30 pF,C0G,1206,onhand,Y1 load caps to GND,
+Passives,C3 C4,2,470 µF 50 V,electrolytic,Ø10 SMD,onhand,bulk across VBUS at J1,all 6 on hand are used across 3 boards
+Passives,C5,1,100 nF 250 V,X7R,1206,onhand,U7 IN+ to GND,
+Passives,C21,1,10 µF 25 V,X7R,1206,onhand,5V0 at U7 OUT+ / U8 IN,25 V part — never on VBUS
+Passives,C23,1,100 nF 250 V,X7R,1206,onhand,5V0 at U8 IN,
+Passives,C6,1,10 µF 25 V,X7R CL31B106KAHNNNE,1206,onhand,3V3 at U8 OUT,25 V part — 3V3 rail only
+Passives,C7,1,1 µF 50 V,X7R,1206,onhand,3V3 at U8 OUT,
+Passives,C8 C9 C10,3,100 nF 250 V,X7R,1206,onhand,U1 VDD pins one each within 2 mm,
+Passives,C11,1,10 µF 25 V,X7R,1206,onhand,VDDA,
+Passives,C12,1,100 nF 250 V,X7R,1206,onhand,VDDA,
+Passives,C13,1,1 µF 50 V,X7R,1206,onhand,VDDA / VREF+,
+Passives,C14 C15,2,100 nF 250 V,X7R,1206,onhand,U3 U4 VS,
+Passives,C16,1,100 nF 250 V,X7R,1206,onhand,U2 VCC,
+Passives,C17,1,100 nF 250 V,X7R,1206,onhand,NRST to GND,
+Passives,C18,1,100 nF 250 V,X7R,1206,onhand,J6 VBUS to GND (HF at the Mini feed),
+Passives,C19 C20,2,1 nF,ADC input RC,1206,dnp,PA0 PA1 to GND,site only — not in stock
+Passives,R1,1,10 k,BOOT0 pull-down,1206,onhand,PB8 to GND + test point,
+Passives,R2,1,10 k,DRV_EN pull-down,1206,onhand,PB2 to GND,keeps the Mini disabled through reset
+Passives,R3,1,10 k,NTC bias,1206,onhand,3V3 to PA3,
+Passives,R4 R5,2,10 k,VBUS divider top (series),1206,onhand,VBUS → PA2 node,
+Passives,R6,1,2.2 k,VBUS divider bottom,1206,onhand,PA2 node to GND,24 V reads 2.38 V; full scale 33.3 V
+Passives,R7 R8,2,4.7 k,I2C pull-ups,1206,dnp,PB6 / PB7 to 3V3,fit only if the AS5600 board has none
+Passives,R9 R10,2,2.2 k,LED series,1206,onhand,LED1 LED2,
+Passives,R11 R12 R13,3,2.2 k,node-ID pull-downs,1206,onhand,PC13 / PC14 / PC15 to GND,
+Passives,R14,1,120 Ω,CAN termination,1206,onhand,CANH–CANL via R15,end nodes only
+Passives,R15,1,0 Ω,termination select,1206,onhand,in series with R14,fit on the two bus ends
+Passives,R16,1,0 Ω,CAN RS to GND,1206,onhand,U2 pin 8 to GND,high-speed mode; is STB for a TCAN332
+Passives,R17 R18 R19,3,0 Ω,node-ID straps,1206,onhand,PC13 / PC14 / PC15 to 3V3,fit to set a bit to 1
+Passives,R20,1,0 Ω,bridge-disable jumper,1206,onhand,PB2 → J7.9 EN,leave open for first power-up
+Passives,R21 R22,2,0 Ω,ADC series (RC site),1206,onhand,U3 / U4 OUT → PA0 / PA1,10 Ω later if the ADC needs it
+Passives,R23,1,0 Ω,VDDA link (ferrite site),1206,onhand,3V3 → VDDA,
+Passives,RS1 RS2,2,30 mΩ 1 W 1 %,ERJ8CWFR030V,1206,confirm,Mini OUT1 / OUT2 → J2 A / B,6 needed for 3 boards — confirm count; Kelvin pads to U3 / U4
+Connectors,J1,1,JST-VH 2P right-angle,12 V in from the harness,3.96 mm THT,onhand,1 VBUS · 2 GND,keyed — no reverse-polarity FET; the first board carries the whole 5 A
+Connectors,J13,1,JST-VH 2P right-angle,12 V out to the next joint,3.96 mm THT,onhand,1 VBUS · 2 GND,pass-through trace to J1 ≥ 2 mm wide (5 A)
+Connectors,J6,1,JST-VH 2P right-angle,VM out to the Mini screw terminal,3.96 mm THT,onhand,1 VBUS · 2 GND,
+Connectors,J2,1,JST-XH 3P right-angle,motor phases,2.54 mm THT,onhand,1 A · 2 B · 3 C,~3 A per contact — fine at 2.5 A peak
+Connectors,J9,1,JST-XH 3P right-angle,CAN in,2.54 mm THT,onhand,1 CANH · 2 CANL · 3 GND,
+Connectors,J10,1,JST-XH 3P right-angle,CAN out,2.54 mm THT,onhand,1 CANH · 2 CANL · 3 GND,
+Connectors,J3,1,JST-XH 5P right-angle,AS5600 + NTC,2.54 mm THT,onhand,1 3V3 · 2 GND · 3 SCL · 4 SDA · 5 NTC,one cable to the motor
+Connectors,J4,1,1×6 female (cut from strip),SPI_A — motor-side encoder upgrade,2.54 mm SMT,onhand,1 3V3 · 2 GND · 3 CS_A · 4 SCK · 5 MISO · 6 MOSI,
+Connectors,J5,1,1×6 female (cut from strip),SPI_B — output-side absolute encoder,2.54 mm SMT,onhand,1 3V3 · 2 GND · 3 CS_B · 4 SCK · 5 MISO · 6 MOSI,
+Connectors,J11,1,1×4 female (cut from strip),SWD,2.54 mm SMT,onhand,1 3V3 · 2 SWDIO · 3 SWCLK · 4 GND,
+Connectors,J12,1,1×3 female (cut from strip),UART,2.54 mm SMT,onhand,1 TX · 2 RX · 3 GND,
+Connectors,J7,1,2×5 male pin header,Mini H1 socket,2.54 mm THT,buy,mates the Mini's female H1,if your Mini has male pins use the female strip here instead
+Connectors,J8,1,1×3 male pin header,Mini P1 socket,2.54 mm THT,buy,mates the Mini's female P1,same
+Off-board,RT1,1,MF52E103 10 k NTC,motor winding thermistor,radial 1 mm,onhand,in the winding; on the J3 cable between pin 5 and GND,
+Off-board,W1,1,2-wire lead ~5 cm,J6 → Mini screw terminal,VH housing + crimps,onhand,VBUS / GND,
+Off-board,W4,1,harness segment,J13 → next board's J1 alongside the CAN pair,VH housing + crimps,onhand,12 V / GND,power and CAN run in one bundle
+Off-board,W2,1,3-wire motor lead,J2 → motor,XH housing + crimps,onhand,A / B / C,
+Off-board,W3,1,5-wire encoder lead,J3 → AS5600 board + NTC,XH housing + crimps,onhand,3V3 / GND / SCL / SDA / NTC,AS5600 board runs at 3.3 V
+Mechanical,PCB,1,2-layer 1 oz ~60×60 mm,Lion Circuits,,buy,,bottom layer = ground pour
+Mechanical,M3,5,M3 mounting holes,4 on a 40 mm square + 1 under the Mini,,onhand,,thermal pad between Mini and carrier pour

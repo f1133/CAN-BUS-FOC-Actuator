@@ -13,10 +13,10 @@ with four things left to buy.
 | | |
 |---|---|
 | Power stage | SimpleFOC Mini (DRV8313) plugged into the carrier — 3-PWM + EN, nFAULT → TIM1 break |
-| DC bus | **24 V** (8–26 V) |
-| Phase current | **±2.5 A peak, ~1.5 A rms** continuous (DRV8313; INA240 range matches exactly) |
+| DC bus | **12 V** from one shared 5 A PSU over the CAN harness, passed through each board (board rated 8–26 V) |
+| Phase current | ≤ 2.5 A peak (DRV8313; INA240 range matches) — at 12 V a gimbal winding limits it first, see `docs/08` |
 | Current sense | 2 × INA240A1 inline, one 30 mΩ per phase between the Mini and the motor |
-| Power | MP1584EN VBUS→3.3 V direct with the CD43 3.3 µH and SS14 (no 5 V rail, no LDO) |
+| Power | MP1584 module (on hand) trimmed to 5 V → AMS1117-3.3 → fixed 3V3 |
 | MCU | STM32G431CBT6 @ 170 MHz — CORDIC, FMAC, dual ADC |
 | Encoders | J3: AS5600 (I2C) + NTC on one 5-pin cable · J4/J5: SPI (MT6701 / AS5047P), motor side and output side |
 | Bus | SN65HVD230 1 Mbps classic CAN (TCAN332 drop-in), node ID by solder straps |
@@ -31,6 +31,8 @@ with four things left to buy.
 4. [`docs/04-firmware-capability.md`](docs/04-firmware-capability.md) — loop structure, CPU budget, dual-encoder scheme, bring-up order.
 5. [`docs/05-can-protocol.md`](docs/05-can-protocol.md) — frame layout.
 6. [`docs/06-spin1-decisions.md`](docs/06-spin1-decisions.md) — decisions, ranked bottleneck upgrades, encoder mounting, first-PCB checklist.
+7. [`docs/07-single-board-bom-and-wiring.md`](docs/07-single-board-bom-and-wiring.md) — designator-level BOM, pin-by-pin connections, wiring diagram (generated).
+8. [`docs/08-board-spec-and-arm-capability.md`](docs/08-board-spec-and-arm-capability.md) — final board specification and what the arm gets from it (generated).
 
 ## Checks
 
@@ -38,6 +40,7 @@ with four things left to buy.
 python3 tools/check_pinmap.py          # 0 conflicts on hardware/pinmap/pinmap.csv
 python3 tools/check_bom.py --boards 3  # shortfall table from hardware/bom/*.csv
 python3 hardware/calc/design_calcs.py  # every number quoted in docs/
+python3 tools/gen_board_docs.py        # regenerates docs/07, docs/08, hardware/wiring/wiring_diagram.svg and the build-sheet page
 ```
 
 ## Layout
@@ -53,8 +56,8 @@ tools/                    check_pinmap.py · check_bom.py
 
 ## Next
 
-- [ ] Confirm counts on hand: SimpleFOC Mini ≥ 3, STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, SS14 ≥ 3
-- [ ] Confirm the cycloidal ratio; check whether the Minis have male or female headers
-- [ ] Buy: MP1584EN ×4, male pin header strip, SMBJ26A ×4 (optional), 2-layer PCB ×5
+- [ ] Confirm counts on hand: SimpleFOC Mini ≥ 3, STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, MP1584 module ≥ 3
+- [ ] Confirm the cycloidal ratio and the motor part number (Kv, R); check whether the Minis have male or female headers
+- [ ] Buy: male pin header strip, SMBJ15A ×4 (optional), 2-layer PCB ×5
 - [ ] KiCad schematic → `hardware/kicad/`, then 2-layer layout
 - [ ] Firmware: SimpleFOC-library bring-up first, then the bare-metal FOC core
