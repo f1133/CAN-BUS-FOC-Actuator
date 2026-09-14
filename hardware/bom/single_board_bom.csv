@@ -4,18 +4,16 @@ Modules & ICs,U2,1,SN65HVD230DR,CAN transceiver 3.3 V 1 Mbps,SOIC-8,onhand,CAN,f
 Modules & ICs,U3,1,INA240A1DR,current-sense amp gain 20,SOIC-8,onhand,phase A shunt RS1,REF1 = 3V3 REF2 = GND → 1.65 V at 0 A
 Modules & ICs,U4,1,INA240A1DR,current-sense amp gain 20,SOIC-8,onhand,phase B shunt RS2,
 Modules & ICs,U6,1,SimpleFOC Mini v1.0,DRV8313 3-phase driver module,26×20 mm module,confirm,power stage on J7 + J8; VM by wire from J6,3 needed — confirm count; check whether its headers are female (design files) or male
-Modules & ICs,U7,1,MP1584EN mini buck module,VBUS → 5.00 V (trim before fitting),22×17 mm module 4 pads,confirm,5V0 stage,on hand — 3 needed. A proven module instead of the discrete MP1584EN circuit (its BST/COMP values are not verified here); SS14 + CD43 stay in the drawer
-Modules & ICs,U8,1,AMS1117-3.3,LDO 5 V → fixed 3.3 V,SOT-223,onhand,3V3 rail,makes 3V3 independent of the module trimmer; 0.17 W at 100 mA; also cleans VDDA
+Modules & ICs,U8,1,AMS1117-3.3,LDO 12 V → fixed 3.3 V,SOT-223,onhand,3V3 rail,fed straight off the bus — no switcher. 0.66 W at the real ~76 mA load; give the tab (pin 2 / VO) a copper pour. This fixes the bus at 12 V (18 V abs max)
 Modules & ICs,D1,1,SMBJ15A,TVS 15 V standoff (12 V system),SMB,optional,across VBUS–GND at J1,hot-plug transients only; SMBJ26A if the arm ever moves to 24 V
 Modules & ICs,LED1,1,Red 1206,power LED,1206,onhand,3V3 → R9 → LED1 → GND,
 Modules & ICs,LED2,1,Red 1206,status LED,1206,onhand,PB9 → R10 → LED2 → GND,
 Passives,Y1,1,8 MHz,X49SM8MSD2SC crystal CL 20 pF,HC-49S SMD,onhand,PF0 / PF1,
 Passives,C1 C2,2,30 pF,C0G,1206,onhand,Y1 load caps to GND,
 Passives,C3 C4,2,470 µF 50 V,electrolytic,Ø10 SMD,onhand,bulk across VBUS at J1,all 6 on hand are used across 3 boards
-Passives,C5,1,100 nF 250 V,X7R,1206,onhand,U7 IN+ to GND,
-Passives,C21,1,10 µF 25 V,X7R,1206,onhand,5V0 at U7 OUT+ / U8 IN,25 V part — never on VBUS
-Passives,C23,1,100 nF 250 V,X7R,1206,onhand,5V0 at U8 IN,
-Passives,C6,1,10 µF 25 V,X7R CL31B106KAHNNNE,1206,onhand,3V3 at U8 OUT,25 V part — 3V3 rail only
+Passives,C5,1,100 nF 250 V,X7R,1206,onhand,U8 VI to GND,HF at the LDO input
+Passives,C21,1,10 µF 25 V,X7R,1206,onhand,VBUS at U8 VI,LDO input bulk; 25 V on a 12 V rail is 48 % derating
+Passives,C6,1,10 µF 25 V,X7R CL31B106KAHNNNE,1206,onhand,3V3 at U8 OUT,LDO output stability — keep ≥ 10 µF
 Passives,C7,1,1 µF 50 V,X7R,1206,onhand,3V3 at U8 OUT,
 Passives,C8 C9 C10,3,100 nF 250 V,X7R,1206,onhand,U1 VDD pins one each within 2 mm,
 Passives,C11,1,10 µF 25 V,X7R,1206,onhand,VDDA,

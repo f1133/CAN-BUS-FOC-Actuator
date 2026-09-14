@@ -27,11 +27,11 @@ table from `tools/check_bom.py --boards 3`.
   One 30 mΩ per phase gives ±2.5 A, which is exactly the DRV8313's peak.
   8 INA240 = 2 per board (+2 spare) → 2-shunt FOC, Ic = −Ia−Ib.
 * **SN65HVD230 ×4 + 120 Ω ×100** → 3.3 V classic CAN, 3 nodes + spare.
-* **MP1584 module (on hand) → 5 V, AMS1117-3.3 → 3V3.** The module's
-  trimmer sets 5 V (drift-tolerant); the LDO holds 3.3 V fixed and clean for
-  VDDA at 0.17 W. CD43 + SS14 unused. The Mini's 3.3 V pin is the DRV8313's
-  LDO, 30 mA max — not enough for MCU + CAN + INA240 + AS5600 (~100 mA), so
-  it stays **unconnected**.
+* **AMS1117-3.3 straight off the 12 V bus.** No switcher at all: the LDO
+  drops 8.7 V at the measured ~76 mA load = 0.66 W, which a SOT-223 sheds into
+  a copper pour. MP1584 module, CD43 and SS14 all unused. The Mini's 3.3 V pin
+  is the DRV8313's own LDO, 30 mA max — nowhere near enough — so it stays
+  **unconnected**.
 * **8 MHz crystal + 30 pF** → HSE for CAN timing.
 * **470 µF 50 V ×6** → two at the DC input per board (the Mini adds 100 µF).
 * **10 µF 25 V ×14** → 3.3 V rail only (101 % of rating at 25.2 V).
@@ -73,7 +73,7 @@ saturates just where the driver's own OCP takes over. **6 shunts for 3 boards.**
 
 | Parameter | Value | Set by |
 |---|---|---|
-| DC bus | **12 V** system (board rated 8–26 V) | one 12 V / 5 A PSU over the CAN harness, J1 in → J13 out |
+| DC bus | **12 V only** (8–15 V) | the AMS1117 fed directly: 18 V abs max and 0.66 W already at 12 V |
 | Peak phase current | **±2.5 A** | DRV8313 = INA240 range |
 | Continuous phase current | **~1.5 A rms** | DRV8313 thermal on the Mini |
 | Peak / continuous electrical | ≈ 30 W / ≈ 20 W per joint at 12 V | a high-R gimbal motor is voltage-limited before the driver: see docs/08 |
@@ -86,15 +86,29 @@ saturates just where the driver's own OCP takes over. **6 shunts for 3 boards.**
 3 joints at 1 kHz: 4-byte command + 8-byte feedback = 68 % bus load. Footprint
 is pin-compatible with TCAN332 (3.3 V, 5 Mbps CAN-FD) for later.
 
-### 2.5 Logic supply — MP1584 module → 5 V → AMS1117-3.3 → 3V3
+### 2.5 Logic supply — AMS1117-3.3 direct, no switcher
 
-The MP1584EN mini module on hand (4 pads, trimmer) makes 5 V — a proven
-circuit instead of a discrete MP1584EN whose BST/COMP values are not verified
-here. The AMS1117-3.3 from the invoice then makes the 3.3 V rail: fixed
-regardless of the trimmer (a drift to 3.6 V+ would kill the MCU), LDO-clean
-for VDDA, 0.17 W at 100 mA. Trim the module to 5.00 V before soldering it
-down. SS14 and CD43 stay in the drawer. Everything analog is ratiometric to
-3V3.
+One part instead of three. The itemised 3V3 load is **76 mA** (MCU 30, CAN 15,
+2 × INA240 5, AS5600 6.5, joint encoder 15, LEDs and pull-ups 4), so the LDO
+drops 8.7 V at 76 mA = **0.66 W**:
+
+| Bus | P in the LDO | ΔT (55 °C/W pour) | ΔT (80 °C/W) | Tj at 40 °C ambient | |
+|---|---|---|---|---|---|
+| **12 V, real load** | 0.66 W | 36 °C | 53 °C | **93 °C** | OK |
+| 12 V, 100 mA budget | 0.87 W | 48 °C | 70 °C | 110 °C | hot, wants a good pour |
+| 15 V | 1.17 W | 64 °C | 94 °C | 134 °C | over Tj(max) |
+| 24 V | 2.07 W | — | — | — | over Tj *and* over the 18 V abs-max input |
+
+**This fixes the board at 12 V.** The AMS1117's 18 V absolute maximum and its
+dissipation are now the bus ceiling, not the DRV8313 — firmware trips at 15 V.
+A higher bus means putting a switching pre-regulator back in front of the LDO.
+
+Pour copper on U8's tab (it is pin 2 / VO) and keep it away from the shunts
+and the INA240s. Dropout is ~1.1 V at this load, so the LDO is comfortable long
+before the DRV8313's 8 V UVLO. PSRR runs ~60 dB at low frequency falling to
+~40 dB by 20 kHz; the 2 × 470 µF bulk plus C5/C21 at the input keep PWM ripple
+off the rail, and VDDA still sits behind R23 + C11/C12/C13. Everything analog
+is ratiometric to 3V3.
 
 ### 2.6 Connectors
 
@@ -125,6 +139,7 @@ down. SS14 and CD43 stay in the drawer. Everything analog is ratiometric to
 | AMS1117-3.3 | 1 | 3 | 5 | OK |
 | 10 µF 25 V | 3 | 9 | 14 | OK |
 | 100 nF 250 V | 11 | 33 | 50 | OK |
+| MP1584 module, SS14, CD43 3.3 µH | 0 | — | — | no longer used |
 | 1 µF 50 V | 4 | 12 | 22 | OK |
 | 10 k / 4.7 k / 2.2 k / 120 Ω / 0 Ω | 6 / 4 / 6 / 1 / 5 | 18 / 12 / 18 / 3 / 15 | 30 / 16 / 100 / 100 / 44 | OK |
 | Red LED | 2 | 6 | 9 | OK |
@@ -143,8 +158,8 @@ down. SS14 and CD43 stay in the drawer. Everything analog is ratiometric to
 | 2 | SMBJ15A | 4 | VBUS hot-plug clamp — optional |
 | 3 | 2-layer PCB, Lion Circuits | 5 | |
 
-That is the whole list. Counts to confirm on hand: SimpleFOC Mini ≥ 3,
-STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, MP1584 module ≥ 3. Optional later: MT6701
+That is the whole list — two lines of it optional. Counts to confirm on hand:
+SimpleFOC Mini ≥ 3, STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6. Optional later: MT6701
 breakout + 6 × 2.5 mm diametric magnet ×3 for the joint encoder on J5.
 
 ## 5. The copper-clad boards are not usable for this design
@@ -161,5 +176,5 @@ the carrier, 1 oz is enough.
 | Current sense | none | 2 × INA240 inline, ±2.5 A |
 | Interface | PWM pins | CAN 1 Mbps, node-ID straps |
 | Encoder | external | AS5600 (I2C) + two SPI ports |
-| Supply | 3.3 V @ 30 mA from DRV8313 | own 5 V module + AMS1117 3.3 V |
+| Supply | 3.3 V @ 30 mA from DRV8313 | own AMS1117 off the 12 V bus |
 | Protection | DRV8313 internal | + TIM1 hardware break on nFAULT, SW OCP, TVS, NTC |

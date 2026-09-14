@@ -70,22 +70,23 @@ cap("C18", "100nF/250V", 55, 225, {"1": "VBUS", "2": "GND"}, note="HF at the J6 
 part("#FLG1", "power:PWR_FLAG", "PWR_FLAG", "", 90, 40, {"1": "VBUS"})
 part("#FLG2", "power:PWR_FLAG", "PWR_FLAG", "", 115, 40, {"1": "GND"})
 
-# ===== Block 2: 5 V module -> AMS1117 -> 3V3 -> VDDA ========================
-part("U7", "canfoc:MP1584_Module", "MP1584EN module", "canfoc:MP1584_Module_4pin", 165, 60,
-     {"1": "VBUS", "2": "GND", "3": "+5V", "4": "GND"},
-     note="set the trimmer to 5.00 V BEFORE fitting")
-cap("C5", "100nF/250V", 165, 110, {"1": "VBUS", "2": "GND"})
-cap("C21", "10uF/25V", 165, 140, {"1": "+5V", "2": "GND"})
-cap("C23", "100nF/250V", 165, 170, {"1": "+5V", "2": "GND"})
+# ===== Block 2: 12 V -> AMS1117 -> 3V3 -> VDDA =============================
+# No switcher. The LDO drops 8.7 V at ~100 mA = 0.87 W, which a SOT-223 can
+# shed into a copper pour. That fixes the bus at 12 V: the AMS1117 is 18 V
+# abs-max, and at 24 V it would burn 2.1 W. See hardware/calc/design_calcs.py.
+cap("C5", "100nF/250V", 165, 70, {"1": "VBUS", "2": "GND"}, note="HF at the U8 input")
+cap("C21", "10uF/25V", 165, 105, {"1": "VBUS", "2": "GND"},
+    note="LDO input bulk; a 25 V X7R on a 12 V rail keeps roughly half its value")
 part("U8", "Regulator_Linear:AMS1117-3.3", "AMS1117-3.3",
-     "Package_TO_SOT_SMD:SOT-223-3_TabPin2", 165, 210,
-     {"1": "GND", "2": "+3V3", "3": "+5V"}, note="0.17 W at 100 mA")
-cap("C6", "10uF/25V", 165, 250, {"1": "+3V3", "2": "GND"})
-cap("C7", "1uF/50V", 165, 280, {"1": "+3V3", "2": "GND"})
-res("R23", "0R", 165, 315, {"1": "+3V3", "2": "VDDA"}, note="ferrite site")
-cap("C11", "10uF/25V", 165, 345, {"1": "VDDA", "2": "GND"})
-cap("C12", "100nF/250V", 165, 375, {"1": "VDDA", "2": "GND"})
-cap("C13", "1uF/50V", 165, 405, {"1": "VDDA", "2": "GND"})
+     "Package_TO_SOT_SMD:SOT-223-3_TabPin2", 165, 150,
+     {"1": "GND", "2": "+3V3", "3": "VBUS"},
+     note="12 V -> 3.3 V direct. Pour copper on the tab (pin 2 / VO)")
+cap("C6", "10uF/25V", 165, 200, {"1": "+3V3", "2": "GND"}, note="LDO output stability: keep >= 10 uF")
+cap("C7", "1uF/50V", 165, 230, {"1": "+3V3", "2": "GND"})
+res("R23", "0R", 165, 265, {"1": "+3V3", "2": "VDDA"}, note="ferrite site")
+cap("C11", "10uF/25V", 165, 295, {"1": "VDDA", "2": "GND"})
+cap("C12", "100nF/250V", 165, 325, {"1": "VDDA", "2": "GND"})
+cap("C13", "1uF/50V", 165, 355, {"1": "VDDA", "2": "GND"})
 
 # ===== Block 3: MCU ========================================================
 part("U1", "MCU_ST_STM32G4:STM32G431CBTx", "STM32G431CBT6",
@@ -267,7 +268,7 @@ for i, (mx, my) in enumerate([(640, 470), (680, 470), (720, 470), (760, 470), (8
 BLOCKS = [
     ("12 V INPUT, BULK, PASS-THROUGH", 30, 28),
     ("CAN 1 Mbps", 30, 283),
-    ("LOGIC RAILS   12 V -> 5 V -> 3V3 -> VDDA", 140, 28),
+    ("LOGIC RAIL   12 V -> AMS1117 -> 3V3 -> VDDA", 140, 28),
     ("ENCODER / SENSOR CONNECTORS", 140, 452),
     ("MCU", 275, 28),
     ("MCU SUPPORT, VBUS DIVIDER, NTC", 425, 28),

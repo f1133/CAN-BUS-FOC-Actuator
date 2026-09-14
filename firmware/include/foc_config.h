@@ -64,9 +64,15 @@
 
 /* ---- Bus limits -------------------------------------------------------- */
 #ifndef BRIDGE_DISCRETE
+/* The 3V3 rail is an AMS1117 fed straight off the bus, so the LDO - not the
+ * DRV8313 - sets the ceiling: 18 V absolute max, and 0.87 W of dissipation
+ * already at 12 V.  This build is a 12 V system; a higher bus needs a
+ * switching pre-regulator back in front of the LDO. */
 #define VBUS_MIN_V                8.0f        /* DRV8313 UVLO */
-#define VBUS_MAX_V                16.0f       /* 12 V PSU system; hardware itself is good to 26 V */
+#define VBUS_MAX_V                15.0f       /* LDO thermal limit, not the driver's */
 #define VBUS_NOMINAL_V            12.0f
+#define LDO_VIN_ABS_MAX_V         18.0f
+#define LOGIC_LOAD_BUDGET_A       0.12f       /* keep the 3V3 load under this or the LDO cooks */
 #define PSU_CURRENT_A             5.0f        /* one PSU shared by all joints over the CAN harness */
 #define N_JOINTS                  3U
 #elif defined(BRIDGE_FET_AOD4184)

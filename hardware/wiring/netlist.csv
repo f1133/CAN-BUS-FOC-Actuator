@@ -14,19 +14,15 @@ J8 — Mini P1 socket (1×3 male),2,OUT2,RS2 → J2.2 (phase B),U4 IN+ on the Mi
 J8 — Mini P1 socket (1×3 male),3,OUT1,RS1 → J2.1 (phase A),U3 IN+ on the Mini side IN− on the motor side
 Mini screw terminal,VM,VBUS,J6.1 by wire W1,
 Mini screw terminal,GND,GND,J6.2 by wire W1,
-J1 — 12 V in (JST-VH 2P),1,VBUS,J13.1 (pass-through) · D1 · C3 · C4 · J6.1 · U7 IN+ · R4,12 V from the shared 5 A PSU; board rated 8–26 V
+J1 — 12 V in (JST-VH 2P),1,VBUS,J13.1 (pass-through) · D1 · C3 · C4 · J6.1 · U8 VI · R4,12 V from the shared 5 A PSU; 8–15 V, the AMS1117 sets the ceiling
 J1 — 12 V in (JST-VH 2P),2,GND,J13.2 · GND,
 J13 — 12 V out (JST-VH 2P),1,VBUS,next board's J1.1,≥ 2 mm trace from J1 — the first board carries the whole 5 A
 J13 — 12 V out (JST-VH 2P),2,GND,next board's J1.2,
 J6 — VM out (JST-VH 2P),1,VBUS,C18 · wire W1 to Mini VM,
 J6 — VM out (JST-VH 2P),2,GND,wire W1 to Mini GND,
-U7 — MP1584 buck module,IN+,VBUS,C5 to GND,
-U7 — MP1584 buck module,IN−,GND,,
-U7 — MP1584 buck module,OUT+,5V0,C21 · C23 · U8 IN,trim to 5.00 V before soldering the module in
-U7 — MP1584 buck module,OUT−,GND,,
-U8 — AMS1117-3.3 (SOT-223),IN,5V0,from U7 OUT+,LDO drop 1.7 V at ~100 mA = 0.17 W
-U8 — AMS1117-3.3 (SOT-223),OUT,3V3,C6 · C7 · U1 VDD ×3 · U1 VBAT · R23 · U2 VCC · U3/U4 VS+REF1 · R3 · R9 · R17–R19 · J3.1 · J4.1 · J5.1 · J11.1,fixed 3.3 V regardless of the module trimmer
-U8 — AMS1117-3.3 (SOT-223),GND / tab,GND,,
+U8 — AMS1117-3.3 (SOT-223),3,VI,VBUS; C5 100 nF + C21 10 µF to GND,fed straight off the 12 V bus — no switcher
+U8 — AMS1117-3.3 (SOT-223),2,VO,3V3: C6 10 µF · C7 1 µF · U1 VDD ×3 · U1 VBAT · R23 · U2 VCC · U3/U4 VS+REF1 · R3 · R9 · R17–R19 · J3.1 · J4.1 · J5.1 · J11.1,pin 2 is also the SOT-223 tab — pour copper on it
+U8 — AMS1117-3.3 (SOT-223),1,GND,GND,0.66 W at the ~76 mA real load; 18 V abs max input fixes the bus at 12 V
 VDDA filter,R23 (0 Ω),3V3 → VDDA,C11 · C12 · C13 · U1 VDDA/VREF+,ferrite site
 U1 — STM32G431CBT6 support,24 · 36 · 48,VDD,3V3,C8 C9 C10 one per VDD pin
 U1 — STM32G431CBT6 support,1,VBAT,3V3,C22 100 nF — VBAT is a separate pin from the three VDDs

@@ -19,27 +19,25 @@
 <text x="550" y="105" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">60 x 60 mm, 2-layer — the board you fabricate</text>
 <rect x="400" y="125" width="440" height="705" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="2"/>
 <rect x="518" y="145" width="212" height="80" rx="3" fill="#FFFFFF" stroke="#1F7A56" stroke-width="1.6"/>
-<text x="530" y="167" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1F7A56">U7 MP1584</text>
-<text x="530" y="183" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">module on 4 pads</text>
-<text x="530" y="201" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">12 V -&gt; 5.00 V</text>
-<text x="530" y="218" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">trim BEFORE fitting</text>
-<rect x="518" y="240" width="212" height="58" rx="3" fill="#FFFFFF" stroke="#1F7A56" stroke-width="1.6"/>
-<text x="530" y="262" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1F7A56">U8 AMS1117-3.3</text>
-<text x="530" y="278" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">5 V -&gt; 3V3 fixed</text>
-<rect x="518" y="313" width="212" height="80" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
-<text x="530" y="335" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U1 STM32G431CBT6</text>
-<text x="530" y="351" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">LQFP-48, 170 MHz</text>
-<text x="530" y="369" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">FOC · CAN · encoders</text>
-<rect x="518" y="408" width="212" height="80" rx="3" fill="#FFFFFF" stroke="#2A5FA8" stroke-width="1.6"/>
-<text x="530" y="430" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#2A5FA8">U3 U4 INA240A1D</text>
-<text x="530" y="446" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">+ RS1 RS2 30 mR</text>
-<text x="530" y="464" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">inline phase A / B</text>
-<text x="530" y="481" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">0.60 V/A, +-2.5 A</text>
-<rect x="518" y="503" width="212" height="58" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
-<text x="530" y="525" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U2 SN65HVD230</text>
-<text x="530" y="541" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">CAN transceiver</text>
-<text x="408" y="596" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">Y1 8 MHz · node-ID straps · LEDs</text>
-<text x="408" y="614" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">J7 + J8: 13-pin socket for the Mini</text>
+<text x="530" y="167" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1F7A56">U8 AMS1117-3.3</text>
+<text x="530" y="183" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">straight off the 12 V bus</text>
+<text x="530" y="201" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">12 V -&gt; 3V3, 0.66 W</text>
+<text x="530" y="218" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">pour copper on the tab</text>
+<rect x="518" y="240" width="212" height="80" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
+<text x="530" y="262" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U1 STM32G431CBT6</text>
+<text x="530" y="278" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">LQFP-48, 170 MHz</text>
+<text x="530" y="296" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">FOC · CAN · encoders</text>
+<rect x="518" y="335" width="212" height="80" rx="3" fill="#FFFFFF" stroke="#2A5FA8" stroke-width="1.6"/>
+<text x="530" y="357" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#2A5FA8">U3 U4 INA240A1D</text>
+<text x="530" y="373" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">+ RS1 RS2 30 mR</text>
+<text x="530" y="391" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">inline phase A / B</text>
+<text x="530" y="408" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">0.60 V/A, +-2.5 A</text>
+<rect x="518" y="430" width="212" height="58" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1.6"/>
+<text x="530" y="452" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U2 SN65HVD230</text>
+<text x="530" y="468" font-size="12" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">CAN transceiver</text>
+<text x="518" y="522" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">Y1 8 MHz · node-ID straps · LEDs</text>
+<text x="518" y="540" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">J7 + J8: 13-pin socket for the Mini</text>
+<text x="518" y="566" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#A33A2E">no switcher anywhere on this board</text>
 <polyline points="400,175 386,175" fill="none" stroke="#1B211D" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="406" y="179" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">J1  12 V in</text>
 <polyline points="400,230 386,230" fill="none" stroke="#1B211D" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>

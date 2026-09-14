@@ -29,34 +29,26 @@
 <polyline points="260,434 272,434" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="252" y="438" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">2 GND</text>
 <rect x="40" y="462" width="220" height="124" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1"/>
-<text x="50" y="481" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U7 MP1584 buck module</text>
-<text x="50" y="496" font-size="11" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">on hand · set to 5.00 V · C5 C21 C23</text>
+<text x="50" y="481" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U8 AMS1117-3.3</text>
+<text x="50" y="496" font-size="11" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">12 V → 3V3 direct, no switcher</text>
 <polyline points="260,512 272,512" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="516" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">IN+  VBUS</text>
+<text x="252" y="516" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">VI  ← VBUS</text>
 <polyline points="260,532 272,532" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="536" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">IN−  GND</text>
+<text x="252" y="536" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">VO  → 3V3</text>
 <polyline points="260,552 272,552" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="556" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">OUT+ 5V0</text>
+<text x="252" y="556" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">GND</text>
 <polyline points="260,572 272,572" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="576" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">OUT− GND</text>
-<rect x="40" y="604" width="220" height="104" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1"/>
-<text x="50" y="623" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U8 AMS1117-3.3</text>
-<text x="50" y="638" font-size="11" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">fixed 3V3 · C6 10 µF C7 1 µF out</text>
+<text x="252" y="576" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">tab = VO, pour!</text>
+<rect x="40" y="604" width="220" height="80" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1"/>
+<text x="50" y="623" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">VDDA filter</text>
+<text x="50" y="638" font-size="11" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">R23 0 Ω · C11 C12 C13</text>
 <polyline points="260,654 272,654" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="658" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">IN  ← 5V0</text>
+<text x="252" y="658" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">3V3</text>
 <polyline points="260,674 272,674" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="678" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">OUT → 3V3</text>
-<polyline points="260,694 272,694" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="698" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">GND / tab</text>
-<rect x="40" y="726" width="220" height="80" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1"/>
-<text x="50" y="745" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">VDDA filter</text>
-<text x="50" y="760" font-size="11" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">R23 0 Ω · C11 C12 C13</text>
-<polyline points="260,776 272,776" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="780" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">3V3</text>
-<polyline points="260,796 272,796" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="252" y="800" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">VDDA</text>
-<polyline points="272,552 284,552 284,654 272,654" fill="none" stroke="#1F7A56" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3 3"/>
-<text x="280" y="607.0" font-size="11" text-anchor="end" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1F7A56">5V0</text>
+<text x="252" y="678" font-size="12.5" text-anchor="end" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#1B211D">VDDA</text>
+<text x="50" y="712" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">C5 100 nF + C21 10 µF at VI · C6 10 µF + C7 1 µF at VO</text>
+<text x="50" y="730" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#A33A2E">0.66 W at the real 76 mA load. 18 V abs max -&gt;</text>
+<text x="50" y="748" font-size="11.5" text-anchor="start" font-weight="normal" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#A33A2E">this board is 12 V only.</text>
 <polyline points="312,82 312,512" fill="none" stroke="#B5652E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="312" y="66" font-size="12" text-anchor="middle" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#B5652E">VBUS 12 V</text>
 <polyline points="272,120 312,120" fill="none" stroke="#B5652E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
@@ -69,19 +61,17 @@
 <circle cx="312" cy="414" r="3" fill="#B5652E"/>
 <polyline points="272,512 312,512" fill="none" stroke="#B5652E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="312" cy="512" r="3" fill="#B5652E"/>
-<polyline points="272,674 336,674 336,128 408,128" fill="none" stroke="#1F7A56" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<polyline points="336,674 336,776 272,776" fill="none" stroke="#1F7A56" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<circle cx="336" cy="674" r="3" fill="#1F7A56"/>
+<polyline points="272,532 336,532 336,128 408,128" fill="none" stroke="#1F7A56" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="336,532 336,654 272,654" fill="none" stroke="#1F7A56" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="336" cy="532" r="3" fill="#1F7A56"/>
 <text x="344" y="118" font-size="12" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1F7A56">3V3</text>
-<polyline points="272,796 360,796 360,154 408,154" fill="none" stroke="#1F7A56" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 4"/>
+<polyline points="272,674 360,674 360,154 408,154" fill="none" stroke="#1F7A56" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="6 4"/>
 <text x="368" y="172" font-size="11" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1F7A56">VDDA</text>
 <text x="276" y="144" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
 <text x="276" y="242" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
 <text x="276" y="340" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
 <text x="276" y="438" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
-<text x="276" y="536" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
-<text x="276" y="576" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
-<text x="276" y="698" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
+<text x="276" y="556" font-size="11.5" text-anchor="start" font-weight="700" font-family="'IBM Plex Mono', ui-monospace, Menlo, monospace" fill="#5F6A63">GND</text>
 <rect x="420" y="70" width="270" height="600" rx="3" fill="#FFFFFF" stroke="#1B211D" stroke-width="1"/>
 <text x="430" y="89" font-size="15" text-anchor="start" font-weight="700" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">U1 STM32G431CBT6</text>
 <text x="430" y="104" font-size="11.5" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#5F6A63">LQFP-48 · 170 MHz · pins by port name</text>
@@ -376,7 +366,7 @@
 <polyline points="420,1125 450,1125" fill="none" stroke="#B5652E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="458" y="1129" font-size="12" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">VBUS 12 V</text>
 <polyline points="550,1125 580,1125" fill="none" stroke="#1F7A56" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-<text x="588" y="1129" font-size="12" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">5V0 → 3V3 / VDDA</text>
+<text x="588" y="1129" font-size="12" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">3V3 / VDDA</text>
 <polyline points="720,1125 750,1125" fill="none" stroke="#2A5FA8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="758" y="1129" font-size="12" text-anchor="start" font-weight="normal" font-family="Barlow, 'Helvetica Neue', Arial, sans-serif" fill="#1B211D">motor phase</text>
 <polyline points="860,1125 890,1125" fill="none" stroke="#1B211D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#arrow)"/>

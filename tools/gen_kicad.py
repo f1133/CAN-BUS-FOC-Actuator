@@ -135,11 +135,50 @@ def build_project_symbols():
 # ---------------------------------------------------------------------------
 # Footprints
 # ---------------------------------------------------------------------------
-MINI_PADS = {  # measured from SimpleFOCMini-1.0/EasyEDA/PCB_simplefocmini_2022-04-20.json
-    **{str(n): (-(n - 1) / 2 * 2.54, 0.0) for n in (1, 3, 5, 7, 9)},
-    **{str(n): (-(n - 2) / 2 * 2.54, 2.54) for n in (2, 4, 6, 8, 10)},
-    "11": (-1.524, 17.653), "12": (-4.064, 17.653), "13": (-6.604, 17.653),
-}
+VENDOR_MINI = ROOT / "hardware" / "vendor" / "simplefocmini" / "PCB_simplefocmini_2022-04-20.json"
+EASYEDA_UNIT_MM = 0.254   # 1 internal unit; confirmed by the 2.54 mm header pitch
+
+
+def mini_geometry():
+    """Socket geometry read straight out of the vendor EasyEDA board file.
+
+    Returns pads {number: (x, y)} and the board outline (x0, y0, x1, y1), in mm
+    relative to H1 pad 1, which is the footprint origin.  EasyEDA's Y axis runs
+    down the screen, same as KiCad's, so no flip is needed.  P1 pads 1-3 are
+    renumbered 11-13 (OUT3, OUT2, OUT1) so the socket has one flat pin space.
+    """
+    d = json.loads(VENDOR_MINI.read_text())
+    shapes = d.get("shape") or d["dataStr"]["shape"]
+
+    headers, outline = {}, []
+    for sh in shapes:
+        fields = sh.split("~")
+        if fields[0] == "TRACK" and fields[2] == "10":          # board outline layer
+            v = [float(x) for x in fields[4].split()]
+            outline += list(zip(v[0::2], v[1::2]))
+        if not sh.startswith("LIB"):
+            continue
+        parts = sh.split("#@$")
+        des = next((q.split("~")[10] for q in parts if q.startswith("TEXT~P~")), None)
+        if des in ("H1", "P1"):
+            headers[des] = {q.split("~")[8]: (float(q.split("~")[2]), float(q.split("~")[3]))
+                            for q in parts if q.startswith("PAD~")}
+    if not {"H1", "P1"} <= headers.keys() or not outline:
+        raise SystemExit(f"{VENDOR_MINI.name}: could not find H1, P1 and the board outline")
+
+    ox, oy = headers["H1"]["1"]
+
+    def mm(x, y):
+        return (round((x - ox) * EASYEDA_UNIT_MM, 3), round((y - oy) * EASYEDA_UNIT_MM, 3))
+
+    pads = {n: mm(*xy) for n, xy in headers["H1"].items()}
+    pads.update({str(int(n) + 10): mm(*xy) for n, xy in headers["P1"].items()})
+    pts = [mm(x, y) for x, y in outline]
+    return pads, (min(p[0] for p in pts), min(p[1] for p in pts),
+                  max(p[0] for p in pts), max(p[1] for p in pts))
+
+
+MINI_PADS, MINI_OUTLINE = mini_geometry()
 MP1584_PITCH_Y = 17.78  # TO VERIFY against your module with calipers
 
 
@@ -162,10 +201,7 @@ def _fp(name, descr, tags, body, keepout=""):
 def build_footprints():
     PRETTY.mkdir(parents=True, exist_ok=True)
     # ---- SimpleFOC Mini socket -------------------------------------------
-    xs = [p[0] for p in MINI_PADS.values()]
-    ys = [p[1] for p in MINI_PADS.values()]
-    x0, x1 = min(xs) - 2.0, max(xs) + 2.0
-    y0, y1 = min(ys) - 2.5, max(ys) + 2.5
+    x0, y0, x1, y1 = MINI_OUTLINE      # the module's real board edge, from the vendor file
     lines = [_pad(n, *MINI_PADS[n], rect=(n == "1")) for n in
              sorted(MINI_PADS, key=int)]
     silk = []
@@ -191,8 +227,10 @@ def build_footprints():
     (PRETTY / "SimpleFOC_Mini_Socket.kicad_mod").write_text(_fp(
         "SimpleFOC_Mini_Socket",
         "Socket for a SimpleFOC Mini v1.0 (DRV8313) module. Pads 1-10 = module header H1, "
-        "11-13 = header P1 (OUT3 OUT2 OUT1). Pad geometry measured from the module's own EasyEDA PCB file. "
-        "Pad 2 is the module 3.3V LDO output - leave unconnected.",
+        "11-13 = header P1 (OUT3 OUT2 OUT1). Pads and outline are generated from the module's own "
+        "EasyEDA board file in hardware/vendor/simplefocmini/. The silkscreen is the real module edge "
+        "%.1f x %.1f mm - keep it clear. Pad 2 is the module 3.3V LDO output, leave unconnected." % (
+            MINI_OUTLINE[2] - MINI_OUTLINE[0], MINI_OUTLINE[3] - MINI_OUTLINE[1]),
         "simplefoc mini drv8313 module socket",
         "\n".join(texts + lines + silk)) + "\n")
 

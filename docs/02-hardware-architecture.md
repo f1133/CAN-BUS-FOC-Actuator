@@ -7,11 +7,11 @@ One carrier + one Mini = one joint. Three on one CAN bus.
   VBUS 12 V ──┬── SMBJ15A ──┬── 2×470 µF 50 V ──┬── J6 JST-VH 2P ── wire ──► Mini screw terminal VM/GND
   GND ────────┤             │                    │
               │      ┌──────┴──────┐             │           ┌──────────────────────────────────┐
-              │      │ U7 MP1584   │             │           │ U6 SimpleFOC Mini (DRV8313)      │
-              │      │ module 5 V  │             │           │ H1 2×5 (J7)        P1 1×3 (J8)   │
-              │      │ → U8        │             │           │ 1 GND  2 3.3V(NC)  1 OUT3 ───────┼──► J2.C
-              │      │ AMS1117-3.3 │             │           │ 3 IN1  4 GND       2 OUT2 ─ 30mΩ ┼──► J2.B
-              │      │ → 3V3       │             │           │ 5 IN2  6 nRESET    3 OUT1 ─ 30mΩ ┼──► J2.A
+              │      │ U8          │             │           │ U6 SimpleFOC Mini (DRV8313)      │
+              │      │ AMS1117-3.3 │             │           │ H1 2×5 (J7)        P1 1×3 (J8)   │
+              │      │ 12 V → 3V3  │             │           │ 1 GND  2 3.3V(NC)  1 OUT3 ───────┼──► J2.C
+              │      │ direct      │             │           │ 3 IN1  4 GND       2 OUT2 ─ 30mΩ ┼──► J2.B
+              │      │ (no buck)   │             │           │ 5 IN2  6 nRESET    3 OUT1 ─ 30mΩ ┼──► J2.A
               │      └──────┬──────┘             │           │ 7 IN3  8 nSLEEP           │  │   │
               │            3V3                   │           │ 9 EN   10 nFAULT          │  │   │
               │             │                    │           └──▲──▲──▲──▲──▲──▲─────────┼──┼───┘
@@ -35,9 +35,8 @@ One carrier + one Mini = one joint. Three on one CAN bus.
 
 | Rail | Source | Load | Notes |
 |---|---|---|---|
-| VBUS 12 V (board 8–26 V) | J1 from the shared 12 V / 5 A PSU; J13 passes it on to the next joint on a ≥ 2 mm trace | Mini via J6, U7 | SMBJ15A optional. 2 × 470 µF 50 V at J1. **Only 50 V / 250 V ceramics on this rail** — the 10 µF are 25 V (fine at 12 V, but keeps the 24 V option open). 100 nF 250 V at J6. |
-| 5V0 | U7 MP1584 module (on hand), trimmed to 5.00 V before fitting; C5 in, C21 10 µF + C23 100 nF out | U8 only (spare 5 V for a fan or 5 V-only add-on) | trimmer drift no longer reaches the MCU |
-| 3V3 | U8 AMS1117-3.3 from 5V0; C6 10 µF + C7 1 µF out | MCU, INA240 ×2, CAN, AS5600, SPI encoders, LEDs (~100 mA) | 0.17 W. VDDA through a 0 Ω/ferrite site + 10 µF + 1 µF + 100 nF. |
+| VBUS 12 V (8–15 V) | J1 from the shared 12 V / 5 A PSU; J13 passes it on to the next joint on a ≥ 2 mm trace | Mini via J6, U8 | SMBJ15A optional. 2 × 470 µF 50 V at J1. **Only 50 V / 250 V ceramics on this rail** — the 10 µF are 25 V (fine at 12 V, but keeps the 24 V option open). 100 nF 250 V at J6. |
+| 3V3 | U8 AMS1117-3.3 **straight off VBUS**; C5 100 nF + C21 10 µF at VI, C6 10 µF + C7 1 µF at VO | MCU, INA240 ×2, CAN, AS5600, SPI encoders, LEDs (76 mA measured, 120 mA budget) | 0.66 W — the hottest part on the carrier. Pour copper on the tab (pin 2 / VO). No switcher anywhere on the board. VDDA through a 0 Ω/ferrite site + 10 µF + 1 µF + 100 nF. |
 | Mini 3.3V-out (H1.2) | DRV8313 V3P3OUT, 30 mA max | — | **Not connected** to the carrier's 3V3: two regulators must not be paralleled, and it can't carry the load anyway. It only feeds the Mini's own pull-ups. |
 
 ## 2. Power stage — SimpleFOC Mini
@@ -93,7 +92,7 @@ AS5600's address is fixed (0x36), so the joint encoder is SPI. Pull-up sites
 
 1. **Hardware**: DRV8313 OCP/UVLO/OTSD → nFAULT → **TIM1 break** forces IN1-3
    idle in one clock; EN pulled low through reset.
-2. **Firmware (20 kHz)**: |I| > 2.8 A, VBUS outside 8–16 V, NTC > 100 °C,
+2. **Firmware (20 kHz)**: |I| > 2.8 A, VBUS outside 8–15 V (the LDO's limit), NTC > 100 °C,
    encoder error → disable / derate.
 3. **CAN**: heartbeat timeout 100 ms → torque off.
 

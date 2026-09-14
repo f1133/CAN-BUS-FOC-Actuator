@@ -146,21 +146,19 @@ def draw(pal):
     s.block("J13", 40, 168, 220, 80, "J13 12 V OUT", "JST-VH 2P → next joint, 5 A trace", right=[("1", "1 VBUS"), ("2", "2 GND")], first=50, pitch=20)
     s.block("PROT", 40, 266, 220, 80, "Input clamp + bulk", "D1 SMBJ15A (opt) · C3 C4 470 µF 50 V", right=[("V", "VBUS"), ("G", "GND")], first=50, pitch=20)
     s.block("J6", 40, 364, 220, 80, "J6 VM OUT", "JST-VH 2P → Mini terminal · C18", right=[("1", "1 VBUS"), ("2", "2 GND")], first=50, pitch=20)
-    s.block("U7", 40, 462, 220, 124, "U7 MP1584 buck module", "on hand · set to 5.00 V · C5 C21 C23",
-            right=[("IN+", "IN+  VBUS"), ("IN-", "IN−  GND"), ("OUT+", "OUT+ 5V0"), ("OUT-", "OUT− GND")], first=50, pitch=20)
-    s.block("U8", 40, 604, 220, 104, "U8 AMS1117-3.3", "fixed 3V3 · C6 10 µF C7 1 µF out",
-            right=[("IN", "IN  ← 5V0"), ("OUT", "OUT → 3V3"), ("GND", "GND / tab")], first=50, pitch=20)
-    s.block("VDDA", 40, 726, 220, 80, "VDDA filter", "R23 0 Ω · C11 C12 C13", right=[("in", "3V3"), ("out", "VDDA")], first=50, pitch=20)
-    # 5V0 loop from the module to the LDO
-    (x5, y5), (x8, y8) = s.pins[("U7", "OUT+")], s.pins[("U8", "IN")]
-    s.line([(x5, y5), (284, y5), (284, y8), (x8, y8)], color="accent", sw=2, dash="3 3")
-    s.text(280, (y5 + y8) / 2 + 4, "5V0", size=11, anchor="end", weight="700", fill="accent")
+    s.block("U8", 40, 462, 220, 124, "U8 AMS1117-3.3", "12 V → 3V3 direct, no switcher",
+            right=[("IN", "VI  ← VBUS"), ("OUT", "VO  → 3V3"), ("GND", "GND"), ("TAB", "tab = VO, pour!")],
+            first=50, pitch=20)
+    s.block("VDDA", 40, 604, 220, 80, "VDDA filter", "R23 0 Ω · C11 C12 C13", right=[("in", "3V3"), ("out", "VDDA")], first=50, pitch=20)
+    s.text(50, 712, "C5 100 nF + C21 10 µF at VI · C6 10 µF + C7 1 µF at VO", size=11.5, mono=True, fill="muted")
+    s.text(50, 730, "0.66 W at the real 76 mA load. 18 V abs max ->", size=11.5, mono=True, fill="buy")
+    s.text(50, 748, "this board is 12 V only.", size=11.5, mono=True, fill="buy")
 
     # VBUS rail
     rail_x = 312
     s.line([(rail_x, 82), (rail_x, 512)], color="copper", sw=2.5)
     s.text(rail_x, 66, "VBUS 12 V", size=12, anchor="middle", weight="700", fill="copper")
-    for key, pk in (("J1", "1"), ("J13", "1"), ("PROT", "V"), ("J6", "1"), ("U7", "IN+")):
+    for key, pk in (("J1", "1"), ("J13", "1"), ("PROT", "V"), ("J6", "1"), ("U8", "IN")):
         x, y = s.pins[(key, pk)]
         s.line([(x, y), (rail_x, y)], color="copper", sw=2.5)
         s.dot(rail_x, y, "copper")
@@ -175,7 +173,7 @@ def draw(pal):
     s.line([(xo, yo), (360, yo), (360, 154), (408, 154)], color="accent", sw=2, dash="6 4")
     s.text(368, 172, "VDDA", size=11, weight="700", fill="accent")
     # GND flags
-    for key, pk in (("J1", "2"), ("J13", "2"), ("PROT", "G"), ("J6", "2"), ("U7", "IN-"), ("U7", "OUT-"), ("U8", "GND")):
+    for key, pk in (("J1", "2"), ("J13", "2"), ("PROT", "G"), ("J6", "2"), ("U8", "GND")):
         x, y = s.pins[(key, pk)]
         s.flag(x + 4, y + 4, "GND", "muted")
 
@@ -327,7 +325,7 @@ def draw(pal):
     # ---- legend -----------------------------------------------------------------
     lx, ly = 420, 1125
     s.line([(lx, ly), (lx + 30, ly)], color="copper", sw=2.5); s.text(lx + 38, ly + 4, "VBUS 12 V", size=12)
-    s.line([(lx + 130, ly), (lx + 160, ly)], color="accent", sw=2.5); s.text(lx + 168, ly + 4, "5V0 → 3V3 / VDDA", size=12)
+    s.line([(lx + 130, ly), (lx + 160, ly)], color="accent", sw=2.5); s.text(lx + 168, ly + 4, "3V3 / VDDA", size=12)
     s.line([(lx + 300, ly), (lx + 330, ly)], color="phase", sw=2); s.text(lx + 338, ly + 4, "motor phase", size=12)
     s.line([(lx + 440, ly), (lx + 470, ly)], sw=1.5, arrow=True); s.text(lx + 478, ly + 4, "logic, arrow = direction", size=12)
     s.text(lx + 670, ly + 4, "A+ A− B+ B− : shunt Kelvin taps, IN+ on the Mini side", size=12, fill="muted")
@@ -356,13 +354,15 @@ def draw_modules(pal):
     s.text(cx0 + 150, 105, "60 x 60 mm, 2-layer — the board you fabricate", size=11.5, fill="muted")
     s.rect(cx0, cy0, cx1 - cx0, cy1 - cy0, sw=2)
 
-    s.panel(518, 145, 212, 80, "U7 MP1584", "module on 4 pads", ["12 V -> 5.00 V", "trim BEFORE fitting"], accent="accent")
-    s.panel(518, 240, 212, 58, "U8 AMS1117-3.3", None, ["5 V -> 3V3 fixed"], accent="accent")
-    s.panel(518, 313, 212, 80, "U1 STM32G431CBT6", "LQFP-48, 170 MHz", ["FOC · CAN · encoders"])
-    s.panel(518, 408, 212, 80, "U3 U4 INA240A1D", "+ RS1 RS2 30 mR", ["inline phase A / B", "0.60 V/A, +-2.5 A"], accent="phase")
-    s.panel(518, 503, 212, 58, "U2 SN65HVD230", None, ["CAN transceiver"])
-    s.text(408, 596, "Y1 8 MHz · node-ID straps · LEDs", size=11.5, mono=True, fill="muted")
-    s.text(408, 614, "J7 + J8: 13-pin socket for the Mini", size=11.5, mono=True, fill="muted")
+    s.panel(518, 145, 212, 80, "U8 AMS1117-3.3", "straight off the 12 V bus", [
+        "12 V -> 3V3, 0.66 W", "pour copper on the tab"], accent="accent")
+    s.panel(518, 240, 212, 80, "U1 STM32G431CBT6", "LQFP-48, 170 MHz", ["FOC · CAN · encoders"])
+    s.panel(518, 335, 212, 80, "U3 U4 INA240A1D", "+ RS1 RS2 30 mR", ["inline phase A / B", "0.60 V/A, +-2.5 A"], accent="phase")
+    s.panel(518, 430, 212, 58, "U2 SN65HVD230", None, ["CAN transceiver"])
+    # keep these clear of the J11/J12 stub labels in the left margin
+    s.text(518, 522, "Y1 8 MHz · node-ID straps · LEDs", size=11.5, mono=True, fill="muted")
+    s.text(518, 540, "J7 + J8: 13-pin socket for the Mini", size=11.5, mono=True, fill="muted")
+    s.text(518, 566, "no switcher anywhere on this board", size=11.5, mono=True, fill="buy", weight="700")
 
     L, R = {}, {}
     for y, name in ((175, "J1  12 V in"), (230, "J13 12 V out"), (330, "J9  CAN in"),
@@ -510,7 +510,7 @@ def md(bom, groups, blocks, cables):
          "## Module wiring — what plugs into what", "",
          "![Module wiring](../hardware/wiring/module_wiring.svg)", "",
          "Every module drawn as a discrete object: the carrier PCB you fabricate, the SimpleFOC Mini that "
-         "plugs into it, the MP1584 and AMS1117 on the carrier, the motor with its AS5600 board and winding "
+         "plugs into it, the AMS1117 that makes 3V3 straight off the 12 V bus, the motor with its AS5600 board and winding "
          "NTC, and the joint encoder on the cycloidal output.", "",
          "### Cables", "",
          "| ID | Connector | From | To | Wires | Length | Notes |", "|---|---|---|---|---|---|---|"]
@@ -520,7 +520,7 @@ def md(bom, groups, blocks, cables):
           "## Three joints on one supply and one bus", "",
           "![Harness](../hardware/wiring/harness.svg)", "",
           "## Board wiring diagram", "", "![Wiring diagram](../hardware/wiring/wiring_diagram.svg)", "",
-         "Copper = VBUS 12 V (J1 in, J13 out to the next joint), green = 5V0 → 3V3 → VDDA, blue = motor phases, black = logic. `A+ A− B+ B−` are the shunt Kelvin taps, IN+ on the Mini side.", "",
+         "Copper = VBUS 12 V (J1 in, J13 out to the next joint), green = 3V3 / VDDA, blue = motor phases, black = logic. `A+ A− B+ B−` are the shunt Kelvin taps, IN+ on the Mini side.", "",
          "## Connections", ""]
     for b, rows in blocks.items():
         o += [f"### {b}", "", "| Pin | Signal | Connects to | Notes |", "|---|---|---|---|"]
@@ -537,7 +537,7 @@ def md(bom, groups, blocks, cables):
     o += ["## Assembly notes", "",
           "* **J7 pin 2 (Mini 3.3V-out) has no copper.** It is the DRV8313's 30 mA LDO; tying it to the carrier 3V3 parallels two regulators.",
           "* **25 V 10 µF caps (C6, C11) live on the 3V3 rail only.** 100 nF 250 V and 1 µF 50 V are the parts that go on VBUS.",
-          "* **Trim U7 to 5.00 V on the bench before soldering it down**; the trimmer is hard to reach afterwards. U8 (AMS1117-3.3) then holds 3V3 fixed whatever the trimmer does.",
+          "* **Give U8 (AMS1117) a copper pour on its tab.** It runs straight off the 12 V bus and dissipates 0.66 W, the most of anything on the carrier; the tab is pin 2 / VO. Its 18 V absolute maximum is what fixes this board at 12 V.",
           "* **Shunts are Kelvin-sensed**: U3/U4 IN+/IN− traces leave from the inner edge of the RS1/RS2 pads, never from the current path. IN+ on the Mini side = positive current into the motor.",
           "* **First power-up**: R20 open, Mini unplugged, bench supply limited to 200 mA. Check 3V3, then fit the Mini, then R20.",
           "* **Mini orientation**: silkscreen the H1 pin-1 corner and the P1 OUT3/OUT2/OUT1 order — a reversed Mini puts 24 V onto logic pins.",
@@ -595,13 +595,13 @@ footer{margin-top:56px;font-size:12.5px;color:var(--muted);font-family:'IBM Plex
 
 SPEC = [
     ("Electrical", [
-        ("DC bus", "12 V from one shared 5 A PSU over the harness; board rated 8–26 V (DRV8313 UVLO 8 V, Mini caps 35 V)"),
+        ("DC bus", "12 V from one shared 5 A PSU over the harness; 8–15 V, the ceiling set by the AMS1117 rather than the DRV8313"),
         ("Power pass-through", "J1 in → J13 out on a ≥ 2 mm trace; the first joint's board carries the whole 5 A"),
         ("Power stage", "SimpleFOC Mini (DRV8313): 3-PWM + EN, internal dead time, OCP / UVLO / thermal → nFAULT"),
         ("Phase current", "2.5 A peak (driver) — at 12 V a gimbal motor is voltage-limited to (12 V/√3)/R first; ~1.5 A rms continuous on the Mini's thermal budget"),
         ("Current sense", "2 × INA240A1 inline, 30 mΩ per phase: 0.60 V/A, ±2.5 A full scale, 1.3 mA/LSB, Ic reconstructed"),
         ("PWM / loops", "20 kHz centre-aligned (12.1-bit) · current 20 kHz · velocity 4 kHz · position 1 kHz"),
-        ("Logic supply", "MP1584 module (on hand) trimmed to 5.00 V → AMS1117-3.3 → fixed 3V3, immune to the module trimmer; everything analog ratiometric to 3V3"),
+        ("Logic supply", "AMS1117-3.3 straight off the 12 V bus — no switcher. 0.66 W at the itemised 76 mA load; pour copper on the tab. Its 18 V abs max is what fixes the bus at 12 V"),
         ("Sensing", "VBUS ÷ 10.1 (8 mV/LSB), motor NTC (10 k, B 3950), MCU die temperature"),
     ]),
     ("Interfaces", [
@@ -613,7 +613,7 @@ SPEC = [
     ]),
     ("Protection", [
         ("Hardware", "DRV8313 nFAULT → TIM1 break (outputs idle in one clock) · EN pulled low through reset · bridge-disable jumper R20"),
-        ("Firmware", "|I| > 2.8 A · VBUS outside 8–16 V · NTC > 100 °C · encoder error → torque off; CAN heartbeat timeout 100 ms → brake"),
+        ("Firmware", "|I| > 2.8 A · VBUS outside 8–15 V · NTC > 100 °C · encoder error → torque off; CAN heartbeat timeout 100 ms → brake"),
         ("Input", "keyed JST-VH, optional SMBJ15A clamp, 2 × 470 µF bulk"),
     ]),
     ("Physical", [
@@ -676,7 +676,7 @@ def page(bom, groups, blocks, cables, svg_html, mod_html, harness_html):
          f'<figure><div class="diagram">{mod_html}</div>',
          '<figcaption>The carrier PCB is the board you fabricate. The SimpleFOC Mini plugs into its 13-pin socket '
          'and takes motor power separately through W1 to its screw terminal; the MP1584 and AMS1117 are soldered to '
-         'the carrier. Copper lines are 12 V, blue is the motor phase path, black is signal.</figcaption></figure>',
+         'the carrier; the AMS1117 makes 3V3 straight off the bus with no switcher. Copper lines are 12 V, blue is the motor phase path, black is signal.</figcaption></figure>',
          "<h3>Cables</h3>",
          '<div class="tablewrap"><table><thead><tr><th class="mono">ID</th><th>Connector</th><th>From</th><th>To</th>'
          '<th>Wires</th><th>Length</th><th>Notes</th></tr></thead><tbody>',
@@ -691,7 +691,7 @@ def page(bom, groups, blocks, cables, svg_html, mod_html, harness_html):
          "<h2>Board wiring diagram</h2>",
          '<p class="lede">The same board drawn schematic-style, pin by pin.</p>',
          f'<figure><div class="diagram">{svg_html}</div>',
-         '<figcaption>One board. Copper lines are the 12 V bus (in at J1, out to the next joint at J13), green the 5V0 → 3V3 → VDDA rails, blue the motor phases through the two shunts; black lines are logic with arrows for direction. Shunt taps are shown as net labels <code>A+ A− B+ B−</code> (IN+ on the Mini side) rather than crossing wires. Pins for the MCU are given by port name; INA240 pin numbers follow the D-package datasheet.</figcaption></figure>',
+         '<figcaption>One board. Copper lines are the 12 V bus (in at J1, out to the next joint at J13), green the 3V3 and VDDA rails, blue the motor phases through the two shunts; black lines are logic with arrows for direction. Shunt taps are shown as net labels <code>A+ A− B+ B−</code> (IN+ on the Mini side) rather than crossing wires. Pins for the MCU are given by port name; INA240 pin numbers follow the D-package datasheet.</figcaption></figure>',
          "<h2>Connections</h2>",
          '<p class="lede">By block, in the order you will wire them: Mini socket first, then power, MCU support, sense amplifiers, CAN, connectors.</p>']
     for b, rows in blocks.items():
@@ -716,7 +716,7 @@ def page(bom, groups, blocks, cables, svg_html, mod_html, harness_html):
     o += ["<h2>Assembly notes</h2>", '<ul class="notes">',
           "<li><b>J7 pin 2 (Mini 3.3V-out) gets no copper.</b> It is the DRV8313's 30 mA LDO; tying it to the carrier 3V3 parallels two regulators.</li>",
           "<li><b>25 V 10 µF caps (C6, C11) live on the 3V3 rail only.</b> The 100 nF 250 V and 1 µF 50 V parts are what goes on VBUS.</li>",
-          "<li><b>Trim U7 to 5.00 V on the bench before soldering it down</b> — the trimmer is hard to reach afterwards. U8 (AMS1117-3.3) then holds 3V3 fixed whatever the trimmer does.</li>",
+          "<li><b>Give U8 (AMS1117) a copper pour on its tab.</b> It runs straight off the 12 V bus and dissipates 0.66 W, the most of anything on the carrier; the tab is pin 2 / VO. Its 18 V absolute maximum is what fixes this board at 12 V.</li>",
           "<li><b>Shunts are Kelvin-sensed.</b> U3/U4 IN+/IN− traces leave from the inner edge of the RS1/RS2 pads, never from the current path. IN+ on the Mini side means positive current flows into the motor.</li>",
           "<li><b>First power-up:</b> R20 open, Mini unplugged, bench supply limited to 200 mA. Check 3V3, fit the Mini, then close R20.</li>",
           "<li><b>Mini orientation:</b> silkscreen the H1 pin-1 corner and the P1 OUT3 / OUT2 / OUT1 order. A reversed Mini puts 24 V onto logic pins.</li>",

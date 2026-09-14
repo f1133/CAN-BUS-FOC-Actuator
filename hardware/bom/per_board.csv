@@ -6,8 +6,8 @@ INA240A1DR,2,U3 U4 phase A/B inline current sense,yes
 X49SM8MSD2SC,1,Y1 HSE,yes
 C-30p-1206,2,C_Y1a C_Y1b crystal load,yes
 C-470u-50V,2,C_BULK1 C_BULK2 DC link at J1 (the Mini adds its own 100 uF),yes
-C-10u-25V-1206,3,5V0 (U8 in) + 3V3 (U8 out) + VDDA — 25 V parts never on VBUS,yes
-C-100n-1206,11,MCU VDD x3 VDDA INA240 x2 CAN NRST U7-in HF 5V0 VM-to-Mini (250 V parts: fine on VBUS),yes
+C-10u-25V-1206,3,U8 input (12 V) + 3V3 out + VDDA,yes
+C-100n-1206,11,MCU VDD x3 VBAT VDDA INA240 x2 CAN NRST U8-in VM-to-Mini (250 V parts: fine on VBUS),yes
 C-1u-50V-1206,4,VDDA VREF MP1584 input 3V3 out (50 V: fine on VBUS),yes
 R-10k-1206,6,BOOT0 pd DRV_EN pd NTC bias VBUS div top x2 buck FB top (nFAULT/nSLEEP/nRESET pull-ups are on the Mini),yes
 R-4k7-1206,4,buck FB (10k+4k7 top / 4k7 bottom = 3.30 V) x2; I2C pull-ups x2 (DNP if AS5600 module has them),yes
@@ -22,7 +22,6 @@ JST-XH-3P-RA,3,J2 motor phases + CAN in / CAN out (CANH CANL GND),yes
 JST-XH-5P-RA,1,J3 AS5600 + NTC: 3V3 GND SCL SDA NTC,yes
 HDR-1x40-F-SMT,19,SWD (4) + UART (3) + J4 SPI_A (6) + J5 SPI_B (6) — cut from strip,yes
 HDR-MALE-2x5+1x3,1,J7/J8 Mini socket: male pins to mate the Mini female headers (use the female strip instead if your Mini came with male pins),NO — MISSING
-MP1584-MODULE,1,U7 MP1584EN mini buck module trimmed to 5.00 V,bought
-AMS1117-3.3,1,U8 5 V -> fixed 3.3 V LDO (immune to the module trimmer),yes
+AMS1117-3.3,1,U8 12 V -> 3.3 V LDO fed straight off the bus (no switcher); pour copper on the tab,yes
 TVS-SMBJ15A,1,VBUS hot-plug clamp for the 12 V system (optional),NO — MISSING
 PCB-2LAYER,1,~60x60 mm 2-layer Lion Circuits,NO — MISSING

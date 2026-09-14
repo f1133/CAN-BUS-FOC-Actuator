@@ -13,10 +13,10 @@ with four things left to buy.
 | | |
 |---|---|
 | Power stage | SimpleFOC Mini (DRV8313) plugged into the carrier — 3-PWM + EN, nFAULT → TIM1 break |
-| DC bus | **12 V** from one shared 5 A PSU over the CAN harness, passed through each board (board rated 8–26 V) |
+| DC bus | **12 V only** (8–15 V), one shared 5 A PSU over the CAN harness, passed through each board |
 | Phase current | ≤ 2.5 A peak (DRV8313; INA240 range matches) — at 12 V a gimbal winding limits it first, see `docs/08` |
 | Current sense | 2 × INA240A1 inline, one 30 mΩ per phase between the Mini and the motor |
-| Power | MP1584 module (on hand) trimmed to 5 V → AMS1117-3.3 → fixed 3V3 |
+| Power | AMS1117-3.3 straight off the 12 V bus — no switcher (0.66 W, pour copper on the tab) |
 | MCU | STM32G431CBT6 @ 170 MHz — CORDIC, FMAC, dual ADC |
 | Encoders | J3: AS5600 (I2C) + NTC on one 5-pin cable · J4/J5: SPI (MT6701 / AS5047P), motor side and output side |
 | Bus | SN65HVD230 1 Mbps classic CAN (TCAN332 drop-in), node ID by solder straps |
@@ -61,15 +61,15 @@ hardware/bom/             inventory.csv (what exists) · per_board.csv (what spi
 hardware/calc/            design_calcs.py — sense range, DRV8313 thermal, buck/SS14, cap ratings, PWM, CAN load, AS5600-through-cycloidal, spin-2 reference
 hardware/pinmap/          pinmap.csv — single source of truth for the MCU pins
 hardware/kicad/           generated KiCad 7 project (schematic, outline, project libs)
+hardware/vendor/          SimpleFOC Mini board file (MIT) — the socket footprint is generated from it
 firmware/include/         foc_config.h — constants derived from the above (-DBRIDGE_DISCRETE for spin 2)
 tools/                    check_pinmap.py · check_bom.py
 ```
 
 ## Next
 
-- [ ] Confirm counts on hand: SimpleFOC Mini ≥ 3, STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, MP1584 module ≥ 3
+- [ ] Confirm counts on hand: SimpleFOC Mini ≥ 3, STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6
 - [ ] Confirm the cycloidal ratio and the motor part number (Kv, R); check whether the Minis have male or female headers
 - [ ] Buy: male pin header strip, SMBJ15A ×4 (optional), 2-layer PCB ×5
-- [ ] Verify the MP1584 module's pad pitch with calipers, then regenerate the KiCad project
 - [ ] Import the netlist into the PCB, place and route the 2-layer board
 - [ ] Firmware: SimpleFOC-library bring-up first, then the bare-metal FOC core

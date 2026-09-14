@@ -10,7 +10,7 @@ Decisions taken for the first PCB order, and what each one changed.
 | **One board drives one motor.** | Three carriers, three Minis, three motors. |
 | **Max spec from the parts.** | The DRV8313's 2.5 A peak is matched exactly by one 30 mΩ + INA240A1 (±2.5 A, 1.3 mA/LSB): 6 shunts total. ~1.5 A rms continuous from the Mini's thermal budget. |
 | **One 12 V / 5 A PSU for the whole arm, over the harness.** | Bus 12 V; each board passes power through J1 → J13 (≥ 2 mm trace, the first board carries all 5 A). At 12 V a gimbal winding, not the driver, sets stall current ((12 V/√3)/R); 24 V would double it with no board change — docs/08. |
-| **Logic supply: module → 5 V → AMS1117-3.3.** | The **MP1584 module on hand** (proven circuit; a discrete MP1584EN's BST/COMP values are unverified here) is trimmed to 5 V; the AMS1117-3.3 from the invoice makes 3V3 fixed and LDO-clean, so a bumped trimmer cannot put 3.6 V+ on the MCU. 0.17 W. CD43 and SS14 unused. |
+| **Logic supply: AMS1117-3.3 straight off the 12 V bus.** | No switcher on the board at all. 8.7 V drop at the itemised 76 mA load = 0.66 W, Tj ≈ 93 °C at 40 °C ambient even on a poor pour. One part instead of three, and nothing to trim before assembly. The cost is that the bus is now **fixed at 12 V** — the AMS1117 is 18 V abs max and would burn 2.1 W at 24 V. MP1584 module, CD43 and SS14 are unused; keep them for a 24 V build. |
 | **AS5600 motors** (as shipped). | I2C1 on J3 = 3V3, GND, SCL, SDA, NTC — one cable to the motor. |
 | **Cycloidal actuator.** | Motor-side encoder cannot give joint-absolute position → **SPI encoder on the output shaft (J5)**. Second AS5600 impossible (fixed address), hence SPI. |
 | **SPI for future encoder upgrade.** | J4 (PA4 CS, motor side) and J5 (PA15 CS, output side) on SPI1; PA7 = MOSI. |
@@ -69,7 +69,7 @@ rotation axis of the cycloidal output — so plan the parts around that:
 
 | Flag | Effect |
 |---|---|
-| (default) | SimpleFOC Mini: 3-PWM, 30 mΩ, ±2.5 A, VBUS 8–16 V (12 V PSU) |
+| (default) | SimpleFOC Mini: 3-PWM, 30 mΩ, ±2.5 A, VBUS 8–15 V (12 V PSU, LDO-limited) |
 | `-DBRIDGE_DISCRETE` | spin-2 6-PWM bridge: 15 mΩ, ±5 A, dead time 400 ns, AO3400 limits (16 V) |
 | `-DBRIDGE_DISCRETE -DBRIDGE_FET_AOD4184` | spin-2 with AOD4184: 24 V |
 | `GEAR_RATIO` | set to the real cycloidal ratio in `foc_config.h` |

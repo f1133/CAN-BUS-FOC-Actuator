@@ -10,7 +10,7 @@ VDD = 3.3
 
 # SimpleFOC Mini v1.0 / DRV8313 (power stage, plugged in)
 MINI_VM_MIN, MINI_VM_MAX = 8.0, 24.0        # Mini README; DRV8313 itself is 60 V, the Mini's 100 uF is 35 V
-VBUS_SYS = 12.0                              # the arm runs from one 12 V 5 A PSU over the CAN harness
+VBUS_SYS = 12.0                              # one 12 V 5 A PSU over the CAN harness; the LDO fixes this
 DRV8313_I_PK = 2.5                          # A per phase
 DRV8313_RDS = 0.20                          # ohm per FET (HS+LS ~0.4 ohm typ, datasheet)
 DRV8313_THETA_JA = 40.0                     # C/W, HTSSOP-28 EP on the Mini's 26x20 mm 2-layer (estimate)
@@ -63,18 +63,42 @@ print("-> plan on ~1.5 A rms continuous, 2.5 A peak.  Bolt the Mini's back to th
 print(f"Mini 3.3 V pin = DRV8313 V3P3OUT, {DRV8313_V3P3_MAX_MA} mA max: NOT enough for MCU+CAN+INA240+AS5600 (~100 mA) -> leave it unconnected; carrier has its own buck.")
 print(f"Electrical power at {VBUS_SYS:.0f} V, rough (V x I): ~{VBUS_SYS*DRV8313_I_PK:.0f} W peak, ~{VBUS_SYS*1.5*1.1:.0f} W continuous per joint")
 
-hr("3. Logic rails: MP1584 module -> 5 V -> AMS1117-3.3 -> 3V3")
-print(f"AMS1117 from 5 V at {LOGIC_LOAD_A*1000:.0f} mA: {(5.0-3.3)*LOGIC_LOAD_A:.2f} W, ΔT ≈ {(5.0-3.3)*LOGIC_LOAD_A*60:.0f} °C (SOT-223) -> OK; 3V3 fixed regardless of the module trimmer")
-print("Discrete MP1584EN numbers below kept for reference only (module is used):")
-for vin in (24.0, 16.0, 12.0):
-    d = BUCK_VOUT / vin; t_on = d / BUCK_FSW; di = (vin - BUCK_VOUT) * d / (BUCK_FSW * BUCK_L); i_pk = LOGIC_LOAD_A + di / 2
-    print(f"Vin {vin:4.1f} V: t_on {t_on*1e9:4.0f} ns ({'OK' if t_on > BUCK_TON_MIN*1.2 else 'near min'})  ΔI {di:.2f} A  I_L,pk {i_pk:.2f} A "
-          f"({'OK' if i_pk < BUCK_L_ISAT else 'EXCEEDS Isat'})  SS14: {vin:.0f} V < {SS14_VR:.0f} V Vr, {i_pk:.2f} A < {SS14_IF:.0f} A -> OK")
-print(f"FB from stock: 10k + 4.7k over 4.7k -> {0.8*(1+14.7/4.7):.2f} V.  RFREQ 100 k from the THT kit.")
+hr("3. Logic rail: AMS1117-3.3 straight off the bus (no switcher)")
+LOAD = [("STM32G431 @170 MHz, peripherals on", 0.030),
+        ("SN65HVD230 average at ~68 % bus load", 0.015),
+        ("INA240A1 x2", 0.005),
+        ("AS5600 on the motor", 0.0065),
+        ("joint SPI encoder (MT6701)", 0.015),
+        ("2 LEDs through 2.2k", 0.0012),
+        ("pull-ups and margin", 0.003)]
+tot = sum(i for _, i in LOAD)
+for name, i in LOAD:
+    print(f"   {name:38s} {i*1000:5.1f} mA")
+print(f"   {'3V3 load':38s} {tot*1000:5.1f} mA  -> design budget {LOGIC_LOAD_A*1000:.0f} mA")
+print(f"{'Vin':>6} {'P_LDO':>7} {'dT @55C/W':>10} {'dT @80C/W':>10} {'Tj @40C amb':>12}   verdict")
+for vin, load, tag in ((12.0, tot, " itemised"), (12.0, LOGIC_LOAD_A, ""), (13.2, LOGIC_LOAD_A, ""),
+                      (15.0, LOGIC_LOAD_A, ""), (18.0, LOGIC_LOAD_A, ""), (24.0, LOGIC_LOAD_A, "")):
+    p_ldo = (vin - 3.3) * load
+    d55, d80 = p_ldo * 55.0, p_ldo * 80.0
+    tj = 40 + d80
+    verdict = ("OK" if tj < 100 else "hot, needs a good pour" if tj < 125
+               else "OVER Tj(max) 125 C" if vin <= 18 else "OVER Tj AND over the 18 V abs-max input")
+    print(f"{vin:5.1f} V {p_ldo:6.2f} W {d55:9.0f} C {d80:9.0f} C {tj:11.0f} C   "
+          f"{verdict}{tag and '  (the real load)'}")
+print("SOT-223 theta_JA is ~55 C/W on a generous pour and ~80 C/W on a minimal one; the tab is pin 2 (VO).")
+print("-> 12 V nominal is fine, 15 V is the practical ceiling, and this build is 12 V only:")
+print("   a higher bus needs a switching pre-regulator back in front of the LDO.")
+print("Dropout at 100 mA is ~1.1 V, so the LDO is happy long before the DRV8313's 8 V UVLO.")
+print("PSRR: ~60 dB at mains/ripple frequencies falling to ~40 dB by 20 kHz; the 2 x 470 uF bulk plus")
+print("C5/C21 at the input keep PWM ripple off the rail, and VDDA still sits behind R23 + C11/C12/C13.")
 
-hr("4. Capacitor voltage ratings (checked at 25.2 V so the 24 V option stays open; at 12 V everything passes)")
-for name, vr in (("10 uF 25 V X7R", 25), ("1 uF 50 V X7R", 50), ("100 nF 250 V X7R", 250), ("470 uF 50 V electrolytic", 50), ("Mini's 100 uF 35 V", 35)):
-    print(f"{name:28s}: {25.2/vr*100:3.0f} % at 25.2 V -> {'keep OFF VBUS' if 25.2/vr > 0.8 else 'OK'}")
+hr("4. Capacitor voltage ratings on the 12 V bus (15 V ceiling)")
+for name, vr in (("10 uF 25 V X7R", 25), ("1 uF 50 V X7R", 50), ("100 nF 250 V X7R", 250),
+                 ("470 uF 50 V electrolytic", 50), ("Mini's 100 uF 35 V", 35)):
+    print(f"{name:28s}: {15.0/vr*100:3.0f} % of rating at the 15 V ceiling -> "
+          f"{'marginal' if 15.0/vr > 0.8 else 'OK'}")
+print("The 10 uF 25 V parts now sit on the 12 V rail at the LDO input (C21): 48 % derating is fine, though")
+print("X7R DC bias leaves roughly half the marked value - which is still plenty for an LDO input.")
 
 hr("5. TIM1 3-PWM @170 MHz")
 arr = FCLK / (2 * PWM_F)
@@ -93,8 +117,14 @@ for joint_dps in (60, 180, 360):
 print("AS5600 CONF SF=2x at boot (0.29 ms vs 2.2 ms).  Joint-absolute position needs the output-side SPI encoder on J5.")
 
 hr("8. Carrier power budget @ 1.5 A rms")
-p_sh = 2 * 1.5**2 * SHUNT_R; p_mini = 3 * 1.5**2 * DRV8313_RDS; p_lg = VDD * LOGIC_LOAD_A / 0.85
-print(f"Mini {p_mini:.2f} W (on the Mini) + shunts {p_sh:.2f} W + logic incl. buck loss {p_lg:.2f} W = {p_mini+p_sh+p_lg:.2f} W -> 2-layer 1 oz is fine; 2 oz if offered")
+p_sh = 2 * 1.5 ** 2 * SHUNT_R
+p_mini = 3 * 1.5 ** 2 * DRV8313_RDS
+p_ldo = (VBUS_SYS - VDD) * LOGIC_LOAD_A
+p_logic = VDD * LOGIC_LOAD_A
+print(f"Mini {p_mini:.2f} W (dissipated on the Mini) + shunts {p_sh:.2f} W + LDO {p_ldo:.2f} W "
+      f"+ logic {p_logic:.2f} W = {p_mini + p_sh + p_ldo + p_logic:.2f} W")
+print(f"The LDO is now the hottest thing on the carrier at {p_ldo:.2f} W - give U8's tab a pour and keep")
+print("it away from the shunts and the INA240s.")
 
 hr("9. Arm capability at 12 V — per joint, then the shared 5 A PSU")
 import sys; sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent))

@@ -49,25 +49,32 @@ Pin numbering was taken from verified sources, not from memory:
 
   Pin 1 is the *inverting* input and pin 4 is a second GND. An earlier draft of
   `hardware/wiring/netlist.csv` had IN+/IN− the other way round; it is corrected.
-* **SimpleFOC Mini H1/P1 pad positions** — measured out of the module's own
-  EasyEDA PCB file, so the socket footprint matches the real module:
-  H1 is a 2×5 on 2.54 mm with pad 1 at the origin, and P1 (OUT3, OUT2, OUT1)
-  sits 17.653 mm away in Y and 1.524 mm in X.
+* **SimpleFOC Mini socket** — not transcribed at all: `tools/gen_kicad.py`
+  parses `hardware/vendor/simplefocmini/PCB_simplefocmini_2022-04-20.json`
+  (the module's own EasyEDA board export, MIT) at build time and generates the
+  pads and the silkscreen from it. H1 is a 2×5 on 2.54 mm with pad 1 at the
+  footprint origin; P1 (OUT3, OUT2, OUT1) sits 17.653 mm away in Y and
+  1.524 mm in X; the module's real outline is 23.0 × 21.0 mm, running
+  x −13.72…+9.29 and y −1.91…+19.05 mm about that origin. Replace the vendor
+  file and re-run the generator to track a new module revision.
 
 ## Before you order the PCB
 
-1. **Measure your MP1584 module.** `MP1584_Module_4pin` uses a **17.78 mm**
-   row pitch as a default — the silkscreen says `VERIFY PITCH`. Set
-   `MP1584_PITCH_Y` in `tools/gen_kicad.py` to what your module actually
-   measures and regenerate. This is the one dimension in the project that is
-   not taken from a verified source.
-2. **Check the Mini's headers.** The footprint is a socket for male pins on the
+1. **Check the Mini's headers.** The footprint is a socket for male pins on the
    carrier mating with the Mini's female headers. If your Mini shipped with
    male pins instead, fit female headers on the carrier — same holes.
-3. `U6` pad 2 is the DRV8313's 3.3 V LDO output and is deliberately
+2. `U6` pad 2 is the DRV8313's 3.3 V LDO output and is deliberately
    unconnected. Keep copper away from it.
+3. **Give U8 (AMS1117) a copper pour on its tab** — it runs straight off the
+   12 V bus and dissipates 0.66 W, the most of anything on the carrier. Its
+   tab is pin 2 / VO, and it sets the 12 V bus ceiling.
 4. Bottom layer stays a continuous ground pour; keep the two shunts Kelvin
    sensed (U3/U4 IN+/IN− leave from the inner edge of the RS1/RS2 pads).
+
+`MP1584_Module_4pin` and `canfoc:MP1584_Module` are still in the project
+library but **no component uses them** — they are there for a future 24 V
+build that puts a switcher back in front of the LDO. Its 17.78 mm row pitch
+is an unverified default; measure your module before using it.
 
 ## Next steps
 
