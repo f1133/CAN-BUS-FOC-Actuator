@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "canfoc")(type "KiCad")(uri "${KIPRJMOD}/lib/canfoc.kicad_sym")(options "")(descr "Project symbols: INA240A1D, SimpleFOC Mini, MP1584 module"))
+)

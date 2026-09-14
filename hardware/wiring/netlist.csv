@@ -28,9 +28,11 @@ U8 — AMS1117-3.3 (SOT-223),IN,5V0,from U7 OUT+,LDO drop 1.7 V at ~100 mA = 0.1
 U8 — AMS1117-3.3 (SOT-223),OUT,3V3,C6 · C7 · U1 VDD ×3 · U1 VBAT · R23 · U2 VCC · U3/U4 VS+REF1 · R3 · R9 · R17–R19 · J3.1 · J4.1 · J5.1 · J11.1,fixed 3.3 V regardless of the module trimmer
 U8 — AMS1117-3.3 (SOT-223),GND / tab,GND,,
 VDDA filter,R23 (0 Ω),3V3 → VDDA,C11 · C12 · C13 · U1 VDDA/VREF+,ferrite site
-U1 — STM32G431CBT6 support,VDD ×3 + VBAT,3V3,C8 C9 C10 one per VDD pin,
-U1 — STM32G431CBT6 support,VDDA / VREF+,VDDA,C11 C12 C13,
-U1 — STM32G431CBT6 support,VSS ×3 + VSSA,GND,,
+U1 — STM32G431CBT6 support,24 · 36 · 48,VDD,3V3,C8 C9 C10 one per VDD pin
+U1 — STM32G431CBT6 support,1,VBAT,3V3,C22 100 nF — VBAT is a separate pin from the three VDDs
+U1 — STM32G431CBT6 support,21 · 20,VDDA · VREF+,VDDA,C11 C12 C13
+U1 — STM32G431CBT6 support,23 · 35 · 47,VSS,GND,
+U1 — STM32G431CBT6 support,19,VSSA,GND,
 U1 — STM32G431CBT6 support,PF0 / PF1,Y1 8 MHz,C1 C2 30 pF to GND,HSE drive = high (20 pF crystal)
 U1 — STM32G431CBT6 support,NRST,C17 100 nF to GND,,
 U1 — STM32G431CBT6 support,PB8 (BOOT0),R1 10 k to GND,test point,
@@ -46,18 +48,21 @@ U1 — STM32G431CBT6 support,PB6 / PB7,I2C1 SCL / SDA,J3.3 / J3.4; R7 R8 (4.7 k)
 U1 — STM32G431CBT6 support,PA4 / PA15,CS_A / CS_B,J4.3 / J5.3,idle high
 U1 — STM32G431CBT6 support,PA5 / PA6 / PA7,SCK / MISO / MOSI,J4.4-6 and J5.4-6 in parallel,SPI1
 U1 — STM32G431CBT6 support,PA12 / PA11,CAN TX / RX,U2 D (pin 1) / U2 R (pin 4),FDCAN1
-U3 — INA240A1 (phase A),IN+,A+,RS1 pad on the Mini side (Kelvin trace from the pad edge),pin numbers per the INA240 D-package datasheet
-U3 — INA240A1 (phase A),IN−,A−,RS1 pad on the motor side (Kelvin trace),
-U3 — INA240A1 (phase A),VS,3V3,C14 100 nF to GND,
-U3 — INA240A1 (phase A),REF1,3V3,,REF1 = VS and REF2 = GND → output sits at 1.65 V at 0 A
-U3 — INA240A1 (phase A),REF2,GND,,
-U3 — INA240A1 (phase A),GND,GND,,
-U3 — INA240A1 (phase A),OUT,ISENSE_A,U1 PA0 via R21 (0 Ω); C19 DNP,0.60 V/A ±2.5 A
-U4 — INA240A1 (phase B),IN+,B+,RS2 pad on the Mini side,
-U4 — INA240A1 (phase B),IN−,B−,RS2 pad on the motor side,
-U4 — INA240A1 (phase B),VS · REF1,3V3,C15 100 nF to GND,
-U4 — INA240A1 (phase B),REF2 · GND,GND,,
-U4 — INA240A1 (phase B),OUT,ISENSE_B,U1 PA1 via R22 (0 Ω); C20 DNP,
+U3 — INA240A1D (phase A),8,IN+,A+ = RS1 pad on the Mini side (Kelvin trace from the pad edge),IN+ on the Mini side means positive current into the motor reads above 1.65 V
+U3 — INA240A1D (phase A),1,IN−,A− = RS1 pad on the motor side (Kelvin trace),CAUTION pin 1 is the INVERTING input — the package is not numbered IN+ first
+U3 — INA240A1D (phase A),2,GND,GND,
+U3 — INA240A1D (phase A),4,GND,GND,pin 4 is a second GND on the D package
+U3 — INA240A1D (phase A),3,REF2,GND,
+U3 — INA240A1D (phase A),7,REF1,3V3,REF1 = VS with REF2 = GND puts the output at VS/2 = 1.65 V at zero current
+U3 — INA240A1D (phase A),6,V+,3V3,C14 100 nF to GND
+U3 — INA240A1D (phase A),5,OUT,ISENSE_A via R21 (0 Ω); C19 DNP to GND,0.60 V/A ±2.5 A -> U1 PA0
+U4 — INA240A1D (phase B),8,IN+,B+ = RS2 pad on the Mini side,
+U4 — INA240A1D (phase B),1,IN−,B− = RS2 pad on the motor side,
+U4 — INA240A1D (phase B),2 · 4,GND,GND,
+U4 — INA240A1D (phase B),3,REF2,GND,
+U4 — INA240A1D (phase B),7,REF1,3V3,
+U4 — INA240A1D (phase B),6,V+,3V3,C15 100 nF to GND
+U4 — INA240A1D (phase B),5,OUT,ISENSE_B via R22 (0 Ω); C20 DNP to GND,-> U1 PA1
 U2 — SN65HVD230 (SOIC-8),1,D,U1 PA12 (FDCAN1_TX),
 U2 — SN65HVD230 (SOIC-8),2,GND,GND,
 U2 — SN65HVD230 (SOIC-8),3,VCC,3V3; C16 100 nF to GND,

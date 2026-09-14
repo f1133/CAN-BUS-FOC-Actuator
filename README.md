@@ -34,6 +34,14 @@ with four things left to buy.
 7. [`docs/07-single-board-bom-and-wiring.md`](docs/07-single-board-bom-and-wiring.md) — designator-level BOM, pin-by-pin connections, wiring diagram (generated).
 8. [`docs/08-board-spec-and-arm-capability.md`](docs/08-board-spec-and-arm-capability.md) — final board specification and what the arm gets from it (generated).
 
+## KiCad project
+
+`hardware/kicad/` holds a generated, verified KiCad 7 project — schematic,
+board outline, project symbol/footprint libraries. See
+[`hardware/kicad/README.md`](hardware/kicad/README.md). The electrical source
+of truth is `tools/board_design.py`; `tools/check_design.py` has KiCad export
+the netlist and compares it pin-for-pin against that design.
+
 ## Checks
 
 ```sh
@@ -41,6 +49,8 @@ python3 tools/check_pinmap.py          # 0 conflicts on hardware/pinmap/pinmap.c
 python3 tools/check_bom.py --boards 3  # shortfall table from hardware/bom/*.csv
 python3 hardware/calc/design_calcs.py  # every number quoted in docs/
 python3 tools/gen_board_docs.py        # regenerates docs/07, docs/08, hardware/wiring/wiring_diagram.svg and the build-sheet page
+python3 tools/gen_kicad.py             # regenerates hardware/kicad/ from tools/board_design.py
+python3 tools/check_design.py          # kicad-cli netlist vs board_design.py, pin for pin
 ```
 
 ## Layout
@@ -50,6 +60,7 @@ docs/                     analysis, architecture, decisions
 hardware/bom/             inventory.csv (what exists) · per_board.csv (what spin 1 needs)
 hardware/calc/            design_calcs.py — sense range, DRV8313 thermal, buck/SS14, cap ratings, PWM, CAN load, AS5600-through-cycloidal, spin-2 reference
 hardware/pinmap/          pinmap.csv — single source of truth for the MCU pins
+hardware/kicad/           generated KiCad 7 project (schematic, outline, project libs)
 firmware/include/         foc_config.h — constants derived from the above (-DBRIDGE_DISCRETE for spin 2)
 tools/                    check_pinmap.py · check_bom.py
 ```
@@ -59,5 +70,6 @@ tools/                    check_pinmap.py · check_bom.py
 - [ ] Confirm counts on hand: SimpleFOC Mini ≥ 3, STM32G431CBT6 ≥ 3, ERJ8CWFR030V ≥ 6, MP1584 module ≥ 3
 - [ ] Confirm the cycloidal ratio and the motor part number (Kv, R); check whether the Minis have male or female headers
 - [ ] Buy: male pin header strip, SMBJ15A ×4 (optional), 2-layer PCB ×5
-- [ ] KiCad schematic → `hardware/kicad/`, then 2-layer layout
+- [ ] Verify the MP1584 module's pad pitch with calipers, then regenerate the KiCad project
+- [ ] Import the netlist into the PCB, place and route the 2-layer board
 - [ ] Firmware: SimpleFOC-library bring-up first, then the bare-metal FOC core

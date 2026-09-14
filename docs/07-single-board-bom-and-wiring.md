@@ -88,9 +88,11 @@ Copper = VBUS 12 V (J1 in, J13 out to the next joint), green = 5V0 → 3V3 → V
 
 | Pin | Signal | Connects to | Notes |
 |---|---|---|---|
-| VDD ×3 + VBAT | 3V3 | C8 C9 C10 one per VDD pin |  |
-| VDDA / VREF+ | VDDA | C11 C12 C13 |  |
-| VSS ×3 + VSSA | GND |  |  |
+| 24 · 36 · 48 | VDD | 3V3 | C8 C9 C10 one per VDD pin |
+| 1 | VBAT | 3V3 | C22 100 nF — VBAT is a separate pin from the three VDDs |
+| 21 · 20 | VDDA · VREF+ | VDDA | C11 C12 C13 |
+| 23 · 35 · 47 | VSS | GND |  |
+| 19 | VSSA | GND |  |
 | PF0 / PF1 | Y1 8 MHz | C1 C2 30 pF to GND | HSE drive = high (20 pF crystal) |
 | NRST | C17 100 nF to GND |  |  |
 | PB8 (BOOT0) | R1 10 k to GND | test point |  |
@@ -107,27 +109,30 @@ Copper = VBUS 12 V (J1 in, J13 out to the next joint), green = 5V0 → 3V3 → V
 | PA5 / PA6 / PA7 | SCK / MISO / MOSI | J4.4-6 and J5.4-6 in parallel | SPI1 |
 | PA12 / PA11 | CAN TX / RX | U2 D (pin 1) / U2 R (pin 4) | FDCAN1 |
 
-### U3 — INA240A1 (phase A)
+### U3 — INA240A1D (phase A)
 
 | Pin | Signal | Connects to | Notes |
 |---|---|---|---|
-| IN+ | A+ | RS1 pad on the Mini side (Kelvin trace from the pad edge) | pin numbers per the INA240 D-package datasheet |
-| IN− | A− | RS1 pad on the motor side (Kelvin trace) |  |
-| VS | 3V3 | C14 100 nF to GND |  |
-| REF1 | 3V3 |  | REF1 = VS and REF2 = GND → output sits at 1.65 V at 0 A |
-| REF2 | GND |  |  |
-| GND | GND |  |  |
-| OUT | ISENSE_A | U1 PA0 via R21 (0 Ω); C19 DNP | 0.60 V/A ±2.5 A |
+| 8 | IN+ | A+ = RS1 pad on the Mini side (Kelvin trace from the pad edge) | IN+ on the Mini side means positive current into the motor reads above 1.65 V |
+| 1 | IN− | A− = RS1 pad on the motor side (Kelvin trace) | CAUTION pin 1 is the INVERTING input — the package is not numbered IN+ first |
+| 2 | GND | GND |  |
+| 4 | GND | GND | pin 4 is a second GND on the D package |
+| 3 | REF2 | GND |  |
+| 7 | REF1 | 3V3 | REF1 = VS with REF2 = GND puts the output at VS/2 = 1.65 V at zero current |
+| 6 | V+ | 3V3 | C14 100 nF to GND |
+| 5 | OUT | ISENSE_A via R21 (0 Ω); C19 DNP to GND | 0.60 V/A ±2.5 A -> U1 PA0 |
 
-### U4 — INA240A1 (phase B)
+### U4 — INA240A1D (phase B)
 
 | Pin | Signal | Connects to | Notes |
 |---|---|---|---|
-| IN+ | B+ | RS2 pad on the Mini side |  |
-| IN− | B− | RS2 pad on the motor side |  |
-| VS · REF1 | 3V3 | C15 100 nF to GND |  |
-| REF2 · GND | GND |  |  |
-| OUT | ISENSE_B | U1 PA1 via R22 (0 Ω); C20 DNP |  |
+| 8 | IN+ | B+ = RS2 pad on the Mini side |  |
+| 1 | IN− | B− = RS2 pad on the motor side |  |
+| 2 · 4 | GND | GND |  |
+| 3 | REF2 | GND |  |
+| 7 | REF1 | 3V3 |  |
+| 6 | V+ | 3V3 | C15 100 nF to GND |
+| 5 | OUT | ISENSE_B via R22 (0 Ω); C20 DNP to GND | -> U1 PA1 |
 
 ### U2 — SN65HVD230 (SOIC-8)
 
@@ -215,7 +220,7 @@ Copper = VBUS 12 V (J1 in, J13 out to the next joint), green = 5V0 → 3V3 → V
 
 ## Bill of materials — one board
 
-On hand 69 · on hand, confirm count 5 · **to buy 3** · optional 1 · DNP sites 4 (line-item quantities).
+On hand 70 · on hand, confirm count 5 · **to buy 3** · optional 1 · DNP sites 4 (line-item quantities).
 
 ### Modules & ICs
 
@@ -250,6 +255,7 @@ On hand 69 · on hand, confirm count 5 · **to buy 3** · optional 1 · DNP site
 | C13 | 1 | 1 µF 50 V — X7R | 1206 | On hand | VDDA / VREF+ |  |
 | C14 C15 | 2 | 100 nF 250 V — X7R | 1206 | On hand | U3 U4 VS |  |
 | C16 | 1 | 100 nF 250 V — X7R | 1206 | On hand | U2 VCC |  |
+| C22 | 1 | 100 nF 250 V — X7R | 1206 | On hand | U1 VBAT (pin 1) to GND | the LQFP-48 has VDD on pins 24/36/48 plus a separate VBAT on pin 1 |
 | C17 | 1 | 100 nF 250 V — X7R | 1206 | On hand | NRST to GND |  |
 | C18 | 1 | 100 nF 250 V — X7R | 1206 | On hand | J6 VBUS to GND (HF at the Mini feed) |  |
 | C19 C20 | 2 | 1 nF — ADC input RC | 1206 | DNP (site only) | PA0 PA1 to GND | site only — not in stock |
@@ -285,8 +291,8 @@ On hand 69 · on hand, confirm count 5 · **to buy 3** · optional 1 · DNP site
 | J5 | 1 | 1×6 female (cut from strip) — SPI_B — output-side absolute encoder | 2.54 mm SMT | On hand | 1 3V3 · 2 GND · 3 CS_B · 4 SCK · 5 MISO · 6 MOSI |  |
 | J11 | 1 | 1×4 female (cut from strip) — SWD | 2.54 mm SMT | On hand | 1 3V3 · 2 SWDIO · 3 SWCLK · 4 GND |  |
 | J12 | 1 | 1×3 female (cut from strip) — UART | 2.54 mm SMT | On hand | 1 TX · 2 RX · 3 GND |  |
-| J7 | 1 | 2×5 male pin header — Mini H1 socket | 2.54 mm THT | Buy | mates the Mini's female H1 | if your Mini has male pins use the female strip here instead |
-| J8 | 1 | 1×3 male pin header — Mini P1 socket | 2.54 mm THT | Buy | mates the Mini's female P1 | same |
+| J7 | 1 | 2×5 male pin header — Mini H1 socket — pads 1-10 of the U6 footprint | 2.54 mm THT | Buy | mates the Mini's female H1 | not a separate schematic symbol; it is part of U6 |
+| J8 | 1 | 1×3 male pin header — Mini P1 socket — pads 11-13 of the U6 footprint | 2.54 mm THT | Buy | mates the Mini's female P1 | not a separate schematic symbol; it is part of U6 |
 
 ### Off-board
 

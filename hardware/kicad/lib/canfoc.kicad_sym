@@ -1,0 +1,79 @@
+(kicad_symbol_lib
+  (version 20220914)
+  (generator canfoc_gen)
+  (symbol
+    "INA240A1D"
+    (pin_names (offset 0.254))
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U" (at -7.62 12.7 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Value" "INA240A1D" (at -7.62 -12.7 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "http://www.ti.com/lit/ds/symlink/ina240.pdf" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "ki_description" "Bidirectional zero-drift current-sense amplifier, 20 V/V, -4..80 V common mode, enhanced PWM rejection, SOIC-8" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (symbol "INA240A1D_0_1" (rectangle (start -7.62 10.16) (end 7.62 -10.16) (stroke (width 0.254) (type default)) (fill (type background))))
+    (symbol
+      "INA240A1D_1_1"
+      (pin input line (at -12.7 5.08 0) (length 5.08) (name "IN+" (effects (font (size 1.0 1.0)))) (number "8" (effects (font (size 1.0 1.0)))))
+      (pin input line (at -12.7 0 0) (length 5.08) (name "IN-" (effects (font (size 1.0 1.0)))) (number "1" (effects (font (size 1.0 1.0)))))
+      (pin output line (at 12.7 5.08 180) (length 5.08) (name "OUT" (effects (font (size 1.0 1.0)))) (number "5" (effects (font (size 1.0 1.0)))))
+      (pin passive line (at 12.7 -2.54 180) (length 5.08) (name "REF1" (effects (font (size 1.0 1.0)))) (number "7" (effects (font (size 1.0 1.0)))))
+      (pin passive line (at 12.7 -7.62 180) (length 5.08) (name "REF2" (effects (font (size 1.0 1.0)))) (number "3" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at 0 15.24 270) (length 5.08) (name "V+" (effects (font (size 1.0 1.0)))) (number "6" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at -2.54 -15.24 90) (length 5.08) (name "GND" (effects (font (size 1.0 1.0)))) (number "2" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at 2.54 -15.24 90) (length 5.08) (name "GND" (effects (font (size 1.0 1.0)))) (number "4" (effects (font (size 1.0 1.0)))))
+    )
+  )
+  (symbol
+    "SimpleFOC_Mini"
+    (pin_names (offset 0.254))
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U" (at -12.7 22.86 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Value" "SimpleFOC_Mini" (at -12.7 -22.86 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Footprint" "canfoc:SimpleFOC_Mini_Socket" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "https://github.com/simplefoc/SimpleFOCMini" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (property
+      "ki_description"
+      "SimpleFOC Mini v1.0 (DRV8313) three-phase driver module. Pins 1-10 are header H1, 11-13 are header P1 (OUT3, OUT2, OUT1). VM/GND arrive at the module screw terminal."
+      (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (symbol "SimpleFOC_Mini_0_1" (rectangle (start -12.7 20.32) (end 12.7 -20.32) (stroke (width 0.254) (type default)) (fill (type background))))
+    (symbol
+      "SimpleFOC_Mini_1_1"
+      (pin input line (at -17.78 15.24 0) (length 5.08) (name "IN1" (effects (font (size 1.0 1.0)))) (number "3" (effects (font (size 1.0 1.0)))))
+      (pin input line (at -17.78 12.7 0) (length 5.08) (name "IN2" (effects (font (size 1.0 1.0)))) (number "5" (effects (font (size 1.0 1.0)))))
+      (pin input line (at -17.78 10.16 0) (length 5.08) (name "IN3" (effects (font (size 1.0 1.0)))) (number "7" (effects (font (size 1.0 1.0)))))
+      (pin input line (at -17.78 5.08 0) (length 5.08) (name "EN" (effects (font (size 1.0 1.0)))) (number "9" (effects (font (size 1.0 1.0)))))
+      (pin input line (at -17.78 2.54 0) (length 5.08) (name "nSLEEP" (effects (font (size 1.0 1.0)))) (number "8" (effects (font (size 1.0 1.0)))))
+      (pin input line (at -17.78 0 0) (length 5.08) (name "nRESET" (effects (font (size 1.0 1.0)))) (number "6" (effects (font (size 1.0 1.0)))))
+      (pin open_collector line (at -17.78 -5.08 0) (length 5.08) (name "nFAULT" (effects (font (size 1.0 1.0)))) (number "10" (effects (font (size 1.0 1.0)))))
+      (pin output line (at 17.78 15.24 180) (length 5.08) (name "OUT1" (effects (font (size 1.0 1.0)))) (number "13" (effects (font (size 1.0 1.0)))))
+      (pin output line (at 17.78 12.7 180) (length 5.08) (name "OUT2" (effects (font (size 1.0 1.0)))) (number "12" (effects (font (size 1.0 1.0)))))
+      (pin output line (at 17.78 10.16 180) (length 5.08) (name "OUT3" (effects (font (size 1.0 1.0)))) (number "11" (effects (font (size 1.0 1.0)))))
+      (pin power_out line (at 0 25.4 270) (length 5.08) (name "3V3_OUT_DO_NOT_CONNECT" (effects (font (size 1.0 1.0)))) (number "2" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at -5.08 -25.4 90) (length 5.08) (name "GND" (effects (font (size 1.0 1.0)))) (number "1" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at 5.08 -25.4 90) (length 5.08) (name "GND" (effects (font (size 1.0 1.0)))) (number "4" (effects (font (size 1.0 1.0)))))
+    )
+  )
+  (symbol
+    "MP1584_Module"
+    (pin_names (offset 0.254))
+    (in_bom yes)
+    (on_board yes)
+    (property "Reference" "U" (at -10.16 10.16 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Value" "MP1584_Module" (at -10.16 -10.16 0) (effects (font (size 1.27 1.27)) (justify left)))
+    (property "Footprint" "canfoc:MP1584_Module_4pin" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "" (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "ki_description" "MP1584EN mini buck module, 4 pads. Set the trimmer to 5.00 V before fitting." (at 0 0 0) (effects (font (size 1.27 1.27)) hide))
+    (symbol "MP1584_Module_0_1" (rectangle (start -10.16 7.62) (end 10.16 -7.62) (stroke (width 0.254) (type default)) (fill (type background))))
+    (symbol
+      "MP1584_Module_1_1"
+      (pin power_in line (at -15.24 5.08 0) (length 5.08) (name "IN+" (effects (font (size 1.0 1.0)))) (number "1" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at -15.24 -5.08 0) (length 5.08) (name "IN-" (effects (font (size 1.0 1.0)))) (number "2" (effects (font (size 1.0 1.0)))))
+      (pin power_out line (at 15.24 5.08 180) (length 5.08) (name "OUT+" (effects (font (size 1.0 1.0)))) (number "3" (effects (font (size 1.0 1.0)))))
+      (pin power_in line (at 15.24 -5.08 180) (length 5.08) (name "OUT-" (effects (font (size 1.0 1.0)))) (number "4" (effects (font (size 1.0 1.0)))))
+    )
+  )
+)
